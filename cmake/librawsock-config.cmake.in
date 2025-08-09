@@ -1,0 +1,34 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# 检查组件要求
+set(_librawsock_supported_components static shared)
+
+foreach(_comp ${librawsock_FIND_COMPONENTS})
+    if (NOT _comp IN_LIST _librawsock_supported_components)
+        set(librawsock_FOUND False)
+        set(librawsock_NOT_FOUND_MESSAGE "Unsupported component: ${_comp}")
+    endif()
+endforeach()
+
+# 导入目标
+if(NOT TARGET librawsock::rawsock)
+    include("${CMAKE_CURRENT_LIST_DIR}/librawsock-targets.cmake")
+endif()
+
+# 设置变量
+set(LIBRAWSOCK_VERSION "@PROJECT_VERSION@")
+set(LIBRAWSOCK_VERSION_MAJOR "@PROJECT_VERSION_MAJOR@")
+set(LIBRAWSOCK_VERSION_MINOR "@PROJECT_VERSION_MINOR@")
+set(LIBRAWSOCK_VERSION_PATCH "@PROJECT_VERSION_PATCH@")
+
+set(LIBRAWSOCK_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set(LIBRAWSOCK_LIBRARIES librawsock::rawsock)
+
+# 兼容性变量
+set(librawsock_INCLUDE_DIRS ${LIBRAWSOCK_INCLUDE_DIRS})
+set(librawsock_LIBRARIES ${LIBRAWSOCK_LIBRARIES})
+set(librawsock_VERSION ${LIBRAWSOCK_VERSION})
+
+check_required_components(librawsock)

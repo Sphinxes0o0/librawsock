@@ -1,0 +1,71 @@
+# Build directories
+build/
+bin/
+lib/
+obj/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+_deps/
+
+# Generated files
+*.so
+*.so.*
+*.a
+*.o
+*.out
+*.exe
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage files
+*.gcno
+*.gcda
+*.gcov
+coverage.info
+coverage_html/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Debug files
+core
+*.core
+*.dump
+
+# Configuration files (keep templates)
+config.h
+!config.h.in
+
+# Package files
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# Documentation build
+docs/_build/
+docs/html/
+docs/latex/
+
+# Backup files
+*.bak
+*.backup
+*~
