@@ -23,7 +23,7 @@ static analyzer_connection_t* analyzer_create_connection(analyzer_context_t* ctx
 static void analyzer_free_connection(analyzer_context_t* ctx, analyzer_connection_t* conn);
 static rawsock_error_t analyzer_parse_packet(const uint8_t* packet_data, size_t packet_size,
                                              analyzer_packet_info_t* packet_info);
-static int analyzer_is_expired(const analyzer_connection_t* conn, const struct timeval* now);
+static int analyzer_is_expired(const analyzer_connection_t* conn, const struct timeval* now, uint32_t timeout_seconds);
 
 /* ===== Core Analyzer API ===== */
 
@@ -268,7 +268,7 @@ size_t analyzer_cleanup_expired(analyzer_context_t* ctx) {
         while (*conn_ptr) {
             analyzer_connection_t* conn = *conn_ptr;
             
-            if (analyzer_is_expired(conn, &now)) {
+            if (analyzer_is_expired(conn, &now, ctx->config.connection_timeout)) {
                 /* Remove from hash table */
                 *conn_ptr = conn->next;
                 
@@ -457,6 +457,10 @@ static analyzer_connection_t* analyzer_create_connection(analyzer_context_t* ctx
         dummy_packet.flow_id = *flow_id;
         
         if (conn->handler->conn_init(ctx, conn, &dummy_packet) != ANALYZER_RESULT_OK) {
+            /* Roll back allocation count and free */
+            if (ctx->allocated_connections > 0) {
+                ctx->allocated_connections--;
+            }
             free(conn);
             return NULL;
         }
@@ -552,10 +556,16 @@ static rawsock_error_t analyzer_parse_packet(const uint8_t* packet_data, size_t 
         if (rawsock_parse_udp_header(packet_info->transport_header, remaining_size, &udp_header) == RAWSOCK_SUCCESS) {
             src_port = udp_header.src_port;
             dst_port = udp_header.dst_port;
-            
+
+            /* UDP payload length should respect UDP header length when sane */
+            size_t udp_len = udp_header.length;
             if (remaining_size >= 8) {
                 packet_info->payload = (const uint8_t*)packet_info->transport_header + 8;
-                packet_info->payload_size = remaining_size - 8;
+                if (udp_len >= 8 && udp_len <= remaining_size) {
+                    packet_info->payload_size = udp_len - 8;
+                } else {
+                    packet_info->payload_size = remaining_size - 8;
+                }
             }
         }
     } else {
@@ -563,22 +573,20 @@ static rawsock_error_t analyzer_parse_packet(const uint8_t* packet_data, size_t 
         packet_info->payload_size = remaining_size;
     }
     
-    analyzer_create_flow_id(ntohl(ip_header.src_addr), ntohl(ip_header.dst_addr),
+    analyzer_create_flow_id(ip_header.src_addr, ip_header.dst_addr,
                            src_port, dst_port, ip_header.protocol,
                            &packet_info->flow_id);
     
     return RAWSOCK_SUCCESS;
 }
 
-static int analyzer_is_expired(const analyzer_connection_t* conn, const struct timeval* now) {
+static int analyzer_is_expired(const analyzer_connection_t* conn, const struct timeval* now, uint32_t timeout_seconds) {
     if (!conn || !now) {
         return 0;
     }
-    
-    /* Use the context configuration timeout instead of the static define */
-    long long diff = (now->tv_sec - conn->last_activity.tv_sec) * 1000000LL + 
+
+    long long diff = (now->tv_sec - conn->last_activity.tv_sec) * 1000000LL +
                      (now->tv_usec - conn->last_activity.tv_usec);
-    
-    /* For now, use a simple 2 second timeout for testing */
-    return (diff > 2 * 1000000LL);
+
+    return (timeout_seconds > 0) ? (diff > (long long)timeout_seconds * 1000000LL) : 0;
 }
