@@ -161,6 +161,7 @@ sudo ./build/bin/simple_tcp_monitor 50
 ## Documentation
 
 - [API Reference](docs/api.md) - Complete API documentation
+- [Use Cases](docs/use_cases.md) - Practical usage scenarios
 - [TCP Analyzer Guide](docs/tcp_analyzer.md) - TCP analysis framework guide
 - [Installation Guide](docs/installation.md) - Building and installation instructions
 - [Design Document](docs/design_document.md) - Comprehensive design documentation
