@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: build-and-test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -21,17 +28,27 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build build-essential
+          sudo apt-get install -y cmake ninja-build build-essential ccache
 
-      - name: Set compiler
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ${{ runner.os }}-ccache-${{ matrix.compiler }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ matrix.compiler }}-
+            ${{ runner.os }}-ccache-
+
+      - name: Set compiler (with ccache)
         run: |
           if [ "${{ matrix.compiler }}" = "clang" ]; then
-            echo "CC=clang" >> $GITHUB_ENV
-            echo "CXX=clang++" >> $GITHUB_ENV
+            echo "CC='ccache clang'" >> $GITHUB_ENV
+            echo "CXX='ccache clang++'" >> $GITHUB_ENV
           else
-            echo "CC=gcc" >> $GITHUB_ENV
-            echo "CXX=g++" >> $GITHUB_ENV
+            echo "CC='ccache gcc'" >> $GITHUB_ENV
+            echo "CXX='ccache g++'" >> $GITHUB_ENV
           fi
+          ccache --zero-stats || true
 
       - name: Configure (CMake)
         run: |
@@ -48,6 +65,10 @@ jobs:
       - name: Run unit tests
         run: |
           ctest --test-dir build --output-on-failure
+
+      - name: ccache stats
+        if: always()
+        run: ccache --show-stats || true
 
       - name: Upload build artifacts (on failure)
         if: failure()
