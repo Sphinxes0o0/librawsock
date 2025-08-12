@@ -108,7 +108,7 @@ rawsock_t* rawsock_create_with_config(const rawsock_config_t* config) {
     
     /* Create socket */
     int domain = (config->family == RAWSOCK_IPV4) ? AF_INET : AF_INET6;
-    sock->sockfd = socket(domain, SOCK_RAW, config->protocol);
+    sock->sockfd = socket(domain, SOCK_RAW | SOCK_CLOEXEC, config->protocol);
     
     if (sock->sockfd < 0) {
         /* Check for permission error */
@@ -235,7 +235,7 @@ int rawsock_recv(rawsock_t* sock, void* buffer, size_t buffer_size,
     if (packet_info) {
         memset(packet_info, 0, sizeof(*packet_info));
         
-        /* Convert source address to string */
+        /* Source address */
         if (src_addr.ss_family == AF_INET) {
             struct sockaddr_in* sin = (struct sockaddr_in*)&src_addr;
             inet_ntop(AF_INET, &sin->sin_addr, packet_info->src_addr, 
@@ -246,6 +246,21 @@ int rawsock_recv(rawsock_t* sock, void* buffer, size_t buffer_size,
             inet_ntop(AF_INET6, &sin6->sin6_addr, packet_info->src_addr,
                      sizeof(packet_info->src_addr));
             packet_info->src_port = ntohs(sin6->sin6_port);
+        }
+        
+        /* Destination (local) address via getsockname */
+        struct sockaddr_storage local_addr;
+        socklen_t local_len = sizeof(local_addr);
+        if (getsockname(sock->sockfd, (struct sockaddr*)&local_addr, &local_len) == 0) {
+            if (local_addr.ss_family == AF_INET) {
+                struct sockaddr_in* lin = (struct sockaddr_in*)&local_addr;
+                inet_ntop(AF_INET, &lin->sin_addr, packet_info->dst_addr, sizeof(packet_info->dst_addr));
+                packet_info->dst_port = ntohs(lin->sin_port);
+            } else if (local_addr.ss_family == AF_INET6) {
+                struct sockaddr_in6* lin6 = (struct sockaddr_in6*)&local_addr;
+                inet_ntop(AF_INET6, &lin6->sin6_addr, packet_info->dst_addr, sizeof(packet_info->dst_addr));
+                packet_info->dst_port = ntohs(lin6->sin6_port);
+            }
         }
         
         packet_info->protocol = sock->protocol;
@@ -448,6 +463,11 @@ static rawsock_error_t addr_string_to_sockaddr(const char* addr_str,
 
 static uint64_t get_timestamp_us(void) {
     struct timespec ts;
+#ifdef CLOCK_MONOTONIC
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
+        return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
+    }
+#endif
     if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
         return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
     }

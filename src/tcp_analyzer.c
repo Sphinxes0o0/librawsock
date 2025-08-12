@@ -460,7 +460,9 @@ rawsock_error_t tcp_parse_options(const rawsock_tcp_header_t* tcp_header,
         switch (opt_type) {
             case TCP_OPT_MSS:
                 if (opt_len == 4) {
-                    options->mss = ntohs(*(uint16_t*)opt->data);
+                    uint16_t mss_net;
+                    memcpy(&mss_net, opt->data, sizeof(mss_net));
+                    options->mss = ntohs(mss_net);
                 }
                 break;
                 
@@ -478,8 +480,11 @@ rawsock_error_t tcp_parse_options(const rawsock_tcp_header_t* tcp_header,
                 
             case TCP_OPT_TIMESTAMP:
                 if (opt_len == 10) {
-                    options->timestamp_val = ntohl(*(uint32_t*)opt->data);
-                    options->timestamp_ecr = ntohl(*(uint32_t*)(opt->data + 4));
+                    uint32_t ts_net, ecr_net;
+                    memcpy(&ts_net, opt->data, sizeof(ts_net));
+                    memcpy(&ecr_net, opt->data + 4, sizeof(ecr_net));
+                    options->timestamp_val = ntohl(ts_net);
+                    options->timestamp_ecr = ntohl(ecr_net);
                 }
                 break;
         }
