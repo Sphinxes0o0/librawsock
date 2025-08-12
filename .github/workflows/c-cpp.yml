@@ -39,14 +39,14 @@ jobs:
             ${{ runner.os }}-ccache-${{ matrix.compiler }}-
             ${{ runner.os }}-ccache-
 
-      - name: Set compiler (with ccache)
+      - name: Set compiler
         run: |
           if [ "${{ matrix.compiler }}" = "clang" ]; then
-            echo "CC='ccache clang'" >> $GITHUB_ENV
-            echo "CXX='ccache clang++'" >> $GITHUB_ENV
+            echo "CC=clang" >> $GITHUB_ENV
+            echo "CXX=clang++" >> $GITHUB_ENV
           else
-            echo "CC='ccache gcc'" >> $GITHUB_ENV
-            echo "CXX='ccache g++'" >> $GITHUB_ENV
+            echo "CC=gcc" >> $GITHUB_ENV
+            echo "CXX=g++" >> $GITHUB_ENV
           fi
           ccache --zero-stats || true
 
@@ -55,6 +55,8 @@ jobs:
           cmake -S . -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_TESTS=ON \
             -DBUILD_EXAMPLES=ON \
             -DBUILD_TOOLS=ON
