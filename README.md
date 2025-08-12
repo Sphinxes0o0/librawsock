@@ -122,16 +122,6 @@ make -j$(nproc)
 sudo make install
 ```
 
-### 构建选项
-
-| 选项 | 默认值 | 说明 |
-|------|--------|------|
-| `BUILD_SHARED_LIBS` | ON | 构建动态库 |
-| `BUILD_STATIC_LIBS` | ON | 构建静态库 |
-| `BUILD_TESTS` | OFF | 构建单元测试 |
-| `BUILD_EXAMPLES` | OFF | 构建示例程序 |
-| `BUILD_TOOLS` | OFF | 构建开发工具 |
-| `ENABLE_COVERAGE` | OFF | 启用代码覆盖率 |
 
 ## Examples
 
