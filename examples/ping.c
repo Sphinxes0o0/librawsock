@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     int ttl = 64;
     int payload_size = 56;
     int opt;
-    
+
     /* Parse command line arguments */
     while ((opt = getopt(argc, argv, "c:i:t:s:h")) != -1) {
         switch (opt) {
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
                 return 1;
         }
     }
-    
+
     /* Check for destination IP */
     if (optind >= argc) {
         fprintf(stderr, "Error: Destination IP address required\n");
@@ -108,13 +108,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     dest_ip = argv[optind];
-    
+
     /* Check privileges */
     if (!rawsock_check_privileges()) {
         fprintf(stderr, "Error: This program requires root privileges or CAP_NET_RAW capability\n");
         return 1;
     }
-    
+
     /* Initialize library */
     rawsock_error_t err = rawsock_init();
     if (err != RAWSOCK_SUCCESS) {
@@ -122,14 +122,14 @@ int main(int argc, char* argv[]) {
                 rawsock_error_string(err));
         return 1;
     }
-    
+
     /* Create raw socket for ICMP */
     rawsock_t* sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_ICMP);
     if (!sock) {
         fprintf(stderr, "Error: Failed to create raw socket\n");
         return 1;
     }
-    
+
     /* Create packet builder */
     rawsock_packet_builder_t* builder = rawsock_packet_builder_create(1500);
     if (!builder) {
@@ -137,24 +137,24 @@ int main(int argc, char* argv[]) {
         rawsock_destroy(sock);
         return 1;
     }
-    
+
     /* Set up signal handler */
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
-    
+
     printf("PING %s: %d data bytes\n", dest_ip, payload_size);
-    
+
     uint16_t sequence = 1;
     uint16_t identifier = getpid() & 0xFFFF;
-    
+
     /* Main ping loop */
     while (g_running && (count == 0 || g_packets_sent < count)) {
         /* Reset packet builder */
         rawsock_packet_builder_reset(builder);
-        
+
         /* Get local IP (simplified - using 0.0.0.0) */
         const char* local_ip = "0.0.0.0";
-        
+
         /* Add IP header */
         err = rawsock_packet_add_ipv4_header(builder, local_ip, dest_ip, 
                                             IPPROTO_ICMP, ttl);
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
                     rawsock_error_string(err));
             break;
         }
-        
+
         /* Add ICMP header (Echo Request) */
         err = rawsock_packet_add_icmp_header(builder, 8, 0, identifier, sequence);
         if (err != RAWSOCK_SUCCESS) {
@@ -171,22 +171,22 @@ int main(int argc, char* argv[]) {
                     rawsock_error_string(err));
             break;
         }
-        
+
         /* Add payload with timestamp */
         uint8_t payload[1400];
         memset(payload, 0, sizeof(payload));
-        
+
         /* Include timestamp in payload */
         uint64_t timestamp = get_time_us();
         if (payload_size >= 8) {
             memcpy(payload, &timestamp, sizeof(timestamp));
         }
-        
+
         /* Fill rest of payload with pattern */
         for (int i = 8; i < payload_size; i++) {
             payload[i] = 0x42 + (i % 26);  /* Pattern */
         }
-        
+
         if (payload_size > 0) {
             err = rawsock_packet_add_payload(builder, payload, payload_size);
             if (err != RAWSOCK_SUCCESS) {
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
                 break;
             }
         }
-        
+
         /* Finalize packet */
         err = rawsock_packet_finalize(builder);
         if (err != RAWSOCK_SUCCESS) {
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
                     rawsock_error_string(err));
             break;
         }
-        
+
         /* Get packet data */
         const void* packet_data;
         size_t packet_size;
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
                     rawsock_error_string(err));
             break;
         }
-        
+
         /* Send packet */
         uint64_t send_time = get_time_us();
         int sent = rawsock_send(sock, packet_data, packet_size, dest_ip);
@@ -222,31 +222,31 @@ int main(int argc, char* argv[]) {
                     rawsock_error_string(-sent));
             break;
         }
-        
+
         g_packets_sent++;
         printf("64 bytes to %s: icmp_seq=%d ttl=%d time=%.3f ms\n",
                dest_ip, sequence, ttl, 0.0);  /* Simplified output */
-        
+
         sequence++;
-        
+
         /* Wait for next packet */
         if (g_running && (count == 0 || g_packets_sent < count)) {
             sleep(interval);
         }
     }
-    
+
     /* Print statistics */
     printf("\n--- %s ping statistics ---\n", dest_ip);
     printf("%d packets transmitted, %d packets received, %.1f%% packet loss\n",
            g_packets_sent, g_packets_received, 
            g_packets_sent > 0 ? 
            (100.0 * (g_packets_sent - g_packets_received) / g_packets_sent) : 0.0);
-    
+
     /* Cleanup */
     rawsock_packet_builder_destroy(builder);
     rawsock_destroy(sock);
     rawsock_cleanup();
-    
+
     return 0;
 }
 

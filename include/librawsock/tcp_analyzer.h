@@ -121,34 +121,34 @@ typedef struct {
 typedef struct {
     tcp_state_t state;                          /**< Current TCP state */
     tcp_sequence_state_t seq_state[2];          /**< Sequence state [forward, reverse] */
-    
+
     /* Connection establishment tracking */
     struct timeval syn_time;                    /**< SYN timestamp */
     struct timeval syn_ack_time;               /**< SYN-ACK timestamp */
     struct timeval established_time;           /**< Connection established time */
-    
+
     /* RTT measurement */
     uint32_t rtt_samples;                      /**< Number of RTT samples */
     uint32_t min_rtt_us;                       /**< Minimum RTT */
     uint32_t max_rtt_us;                       /**< Maximum RTT */
     uint32_t avg_rtt_us;                       /**< Average RTT */
     uint32_t rtt_variance;                     /**< RTT variance */
-    
+
     /* Retransmission tracking */
     tcp_retransmit_info_t retransmits[32];     /**< Retransmission tracking */
     size_t retransmit_count;                   /**< Number of retransmissions */
-    
+
     /* Performance metrics */
     uint64_t bytes_in_flight[2];               /**< Bytes in flight [forward, reverse] */
     uint32_t effective_window[2];              /**< Effective window size */
     uint32_t congestion_window[2];             /**< Estimated congestion window */
-    
+
     /* Flags and state */
     uint8_t handshake_complete;                /**< 3-way handshake complete */
     uint8_t fin_seen[2];                       /**< FIN seen [forward, reverse] */
     uint8_t rst_seen;                          /**< RST seen */
     uint8_t simultaneous_close;                /**< Simultaneous close detected */
-    
+
     /* Quality metrics */
     uint32_t out_of_order_packets[2];          /**< Out-of-order packets */
     uint32_t duplicate_acks[2];                /**< Duplicate ACKs */

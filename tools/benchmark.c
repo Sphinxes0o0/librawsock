@@ -24,9 +24,9 @@ typedef struct {
 
 static int benchmark_packet_creation(int iterations) {
     printf("Benchmarking packet creation (%d iterations)...\n", iterations);
-    
+
     clock_t start = clock();
-    
+
     for (int i = 0; i < iterations; i++) {
         rawsock_packet_builder_t* builder = rawsock_packet_builder_create(1500);
         if (builder) {
@@ -36,77 +36,77 @@ static int benchmark_packet_creation(int iterations) {
             rawsock_packet_builder_destroy(builder);
         }
     }
-    
+
     clock_t end = clock();
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
-    
+
     printf("  Time: %.3f seconds\n", elapsed);
     printf("  Rate: %.0f packets/sec\n", iterations / elapsed);
-    
+
     return 0;
 }
 
 static int benchmark_tcp_analysis(int iterations) {
     printf("Benchmarking TCP analysis (%d iterations)...\n", iterations);
-    
+
     analyzer_context_t* ctx = analyzer_create();
     analyzer_protocol_handler_t* tcp_handler = tcp_analyzer_create();
     analyzer_register_handler(ctx, tcp_handler);
-    
+
     clock_t start = clock();
-    
+
     uint8_t packet[100] = {0};
     struct timeval timestamp = {0, 0};
-    
+
     for (int i = 0; i < iterations; i++) {
         analyzer_process_packet(ctx, packet, sizeof(packet), &timestamp);
     }
-    
+
     clock_t end = clock();
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
-    
+
     printf("  Time: %.3f seconds\n", elapsed);
     printf("  Rate: %.0f packets/sec\n", iterations / elapsed);
-    
+
     tcp_analyzer_destroy(tcp_handler);
     analyzer_destroy(ctx);
-    
+
     return 0;
 }
 
 static int benchmark_memory_usage(int iterations) {
     printf("Benchmarking memory usage (%d connections)...\n", iterations);
-    
+
     analyzer_context_t* ctx = analyzer_create();
     analyzer_protocol_handler_t* tcp_handler = tcp_analyzer_create();
     analyzer_register_handler(ctx, tcp_handler);
-    
+
     clock_t start = clock();
-    
-    // 创建大量连接
+
+    // Create many connections
     for (int i = 0; i < iterations; i++) {
         uint8_t packet[64] = {0};
         struct timeval timestamp = {0, 0};
-        
-        // 模拟不同的连接
-        packet[12] = (i >> 24) & 0xFF;  // 源IP
+
+        // Simulate different connections
+        packet[12] = (i >> 24) & 0xFF;  // Source IP
         packet[13] = (i >> 16) & 0xFF;
         packet[14] = (i >> 8) & 0xFF;
         packet[15] = i & 0xFF;
-        
+
         analyzer_process_packet(ctx, packet, sizeof(packet), &timestamp);
     }
-    
+
     clock_t end = clock();
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
-    
+
     printf("  Time: %.3f seconds\n", elapsed);
     printf("  Connections: %lu\n", ctx->total_connections);
     printf("  Rate: %.0f connections/sec\n", ctx->total_connections / elapsed);
-    
+
     tcp_analyzer_destroy(tcp_handler);
     analyzer_destroy(ctx);
-    
+
     return 0;
 }
 
@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
     int iterations = 10000;
     int run_all = 0;
     int list_only = 0;
-    
+
     static struct option long_options[] = {
         {"iterations", required_argument, 0, 'i'},
         {"all", no_argument, 0, 'a'},
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
-    
+
     int opt;
     while ((opt = getopt_long(argc, argv, "i:alh", long_options, NULL)) != -1) {
         switch (opt) {
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
                 return 1;
         }
     }
-    
+
     if (list_only) {
         printf("Available benchmarks:\n");
         for (int i = 0; benchmarks[i].name; i++) {
@@ -171,11 +171,11 @@ int main(int argc, char* argv[]) {
         }
         return 0;
     }
-    
+
     printf("LibRawSock Benchmark Suite\n");
     printf("==========================\n");
     printf("Iterations: %d\n\n", iterations);
-    
+
     if (run_all) {
         for (int i = 0; benchmarks[i].name; i++) {
             benchmarks[i].benchmark_func(iterations);
@@ -183,14 +183,14 @@ int main(int argc, char* argv[]) {
         }
     } else if (optind < argc) {
         const char* benchmark_name = argv[optind];
-        
+
         for (int i = 0; benchmarks[i].name; i++) {
             if (strcmp(benchmarks[i].name, benchmark_name) == 0) {
                 benchmarks[i].benchmark_func(iterations);
                 return 0;
             }
         }
-        
+
         printf("Unknown benchmark: %s\n", benchmark_name);
         return 1;
     } else {
@@ -198,6 +198,6 @@ int main(int argc, char* argv[]) {
         print_usage(argv[0]);
         return 1;
     }
-    
+
     return 0;
 }

@@ -1,219 +1,219 @@
-# LibRawSock - 项目总结
+# LibRawSock - Project Summary
 
-## 项目概述
+## Project Overview
 
-LibRawSock 是一个功能完整的 C/C++ raw socket 网络库，提供了易用的 API 接口和丰富的数据包处理功能。
+LibRawSock is a complete C/C++ raw socket network library that provides easy-to-use API interfaces and rich packet processing functionality.
 
-## 已完成功能
+## Completed Features
 
-### ✅ 核心功能
-- [x] Raw socket 创建和管理
-- [x] IPv4/IPv6 支持
-- [x] 数据包发送和接收
-- [x] 完整的错误处理机制
-- [x] 超时和配置选项支持
+### ✅ Core Features
+- [x] Raw socket creation and management
+- [x] IPv4/IPv6 support
+- [x] Packet sending and receiving
+- [x] Complete error handling mechanism
+- [x] Timeout and configuration options support
 
-### ✅ 协议分析框架 (新增)
-- [x] 可扩展的协议分析架构
-- [x] TCP 协议深度分析
-- [x] 连接状态跟踪和管理
-- [x] RTT 测量和性能分析
-- [x] 数据流重组和应用层提取
+### ✅ Protocol Analysis Framework (New)
+- [x] Extensible protocol analysis architecture
+- [x] TCP protocol deep analysis
+- [x] Connection state tracking and management
+- [x] RTT measurement and performance analysis
+- [x] Data stream reassembly and application layer extraction
 
-### ✅ 数据包处理
-- [x] IPv4/IPv6 头部构造和解析
-- [x] TCP 头部构造和解析
-- [x] UDP 头部构造和解析
-- [x] ICMP 头部构造和解析
-- [x] 校验和计算
-- [x] 地址转换工具
+### ✅ Packet Processing
+- [x] IPv4/IPv6 header construction and parsing
+- [x] TCP header construction and parsing
+- [x] UDP header construction and parsing
+- [x] ICMP header construction and parsing
+- [x] Checksum calculation
+- [x] Address conversion utilities
 
-### ✅ 构建系统
-- [x] 现代化的 CMake 构建系统
-- [x] 模块化编译支持
-- [x] 一键构建脚本
-- [x] 静态库和动态库构建
-- [x] 安装和卸载支持
-- [x] 调试构建选项
+### ✅ Build System
+- [x] Modern CMake build system
+- [x] Modular compilation support
+- [x] One-click build script
+- [x] Static and dynamic library building
+- [x] Installation and uninstallation support
+- [x] Debug build options
 
-### ✅ 代码质量
-- [x] 良好的代码风格和注释
-- [x] 完整的 API 文档
-- [x] 全面的单元测试
-- [x] 错误处理和参数验证
+### ✅ Code Quality
+- [x] Good code style and comments
+- [x] Complete API documentation
+- [x] Comprehensive unit tests
+- [x] Error handling and parameter validation
 
-### ✅ 示例和文档
-- [x] Ping 实现示例
-- [x] TCP SYN 扫描示例
-- [x] 数据包嗅探示例
-- [x] TCP 连接分析器示例 (新增)
-- [x] 简单 TCP 监控器示例 (新增)
-- [x] 详细的 API 参考文档
-- [x] TCP 分析器文档 (新增)
-- [x] 安装和使用指南
+### ✅ Examples and Documentation
+- [x] Ping implementation example
+- [x] TCP SYN scan example
+- [x] Packet sniffer example
+- [x] TCP connection analyzer example (New)
+- [x] Simple TCP monitor example (New)
+- [x] Detailed API reference documentation
+- [x] TCP analyzer documentation (New)
+- [x] Installation and usage guides
 
-## 项目结构
+## Project Structure
 
 ```
 librawsock/
-├── include/librawsock/          # 头文件
-│   ├── rawsock.h               # 核心 API
-│   ├── packet.h                # 数据包工具
-│   ├── analyzer.h              # 协议分析框架 (新增)
-│   └── tcp_analyzer.h          # TCP 分析器 (新增)
-├── src/                        # 源代码
-│   ├── rawsock.c              # 核心实现
-│   ├── packet.c               # 数据包实现
-│   ├── analyzer.c             # 协议分析框架 (新增)
-│   └── tcp_analyzer.c         # TCP 分析器实现 (新增)
-├── tests/                      # 单元测试
-│   ├── test_rawsock.c         # 核心功能测试
-│   ├── test_packet.c          # 数据包测试
-│   └── test_analyzer.c        # 协议分析器测试 (新增)
-├── examples/                   # 示例程序
-│   ├── ping.c                 # Ping 实现
-│   ├── tcp_syn_scan.c         # TCP 扫描器
-│   ├── packet_sniffer.c       # 数据包嗅探器
-│   ├── tcp_connection_analyzer.c  # TCP 连接分析器 (新增)
-│   └── simple_tcp_monitor.c   # 简单 TCP 监控器 (新增)
-├── docs/                       # 文档
-│   ├── api.md                 # API 参考
-│   ├── cmake_guide.md         # CMake 构建指南 (新增)
-│   └── tcp_analyzer.md       # TCP 分析器文档 (新增)
-├── CMakeLists.txt              # 主CMake构建文件
-├── build.sh                    # 一键构建脚本
-└── README.md                   # 项目说明
+├── include/librawsock/          # Header files
+│   ├── rawsock.h               # Core API
+│   ├── packet.h                # Packet utilities
+│   ├── analyzer.h              # Protocol analysis framework (New)
+│   └── tcp_analyzer.h          # TCP analyzer (New)
+├── src/                        # Source code
+│   ├── rawsock.c              # Core implementation
+│   ├── packet.c               # Packet implementation
+│   ├── analyzer.c             # Protocol analysis framework (New)
+│   └── tcp_analyzer.c         # TCP analyzer implementation (New)
+├── tests/                      # Unit tests
+│   ├── test_rawsock.c         # Core functionality tests
+│   ├── test_packet.c          # Packet tests
+│   └── test_analyzer.c        # Protocol analyzer tests (New)
+├── examples/                   # Example programs
+│   ├── ping.c                 # Ping implementation
+│   ├── tcp_syn_scan.c         # TCP scanner
+│   ├── packet_sniffer.c       # Packet sniffer
+│   ├── tcp_connection_analyzer.c  # TCP connection analyzer (New)
+│   └── simple_tcp_monitor.c   # Simple TCP monitor (New)
+├── docs/                       # Documentation
+│   ├── api.md                 # API reference
+│   ├── cmake_guide.md         # CMake build guide (New)
+│   └── tcp_analyzer.md       # TCP analyzer documentation (New)
+├── CMakeLists.txt              # Main CMake build file
+├── build.sh                    # One-click build script
+└── README.md                   # Project description
 ```
 
-## 技术特性
+## Technical Features
 
-### 核心 API
-- **Socket 管理**: 创建、配置、销毁 raw socket
-- **数据传输**: 发送和接收数据包，支持指定网络接口
-- **错误处理**: 完整的错误码和描述信息
-- **权限检查**: 自动检测 raw socket 权限
+### Core API
+- **Socket Management**: Create, configure, destroy raw sockets
+- **Data Transmission**: Send and receive packets, support for specifying network interfaces
+- **Error Handling**: Complete error codes and description information
+- **Permission Checking**: Automatic raw socket permission detection
 
-### 数据包构造器
-- **Builder 模式**: 链式 API 构造复杂数据包
-- **协议支持**: IPv4/IPv6, TCP, UDP, ICMP
-- **自动计算**: 长度字段和校验和自动计算
-- **灵活配置**: 支持自定义头部字段
+### Packet Constructor
+- **Builder Pattern**: Chain API for constructing complex packets
+- **Protocol Support**: IPv4/IPv6, TCP, UDP, ICMP
+- **Automatic Calculation**: Length fields and checksums automatically calculated
+- **Flexible Configuration**: Support for custom header fields
 
-### 数据包解析器
-- **协议解析**: 自动解析各种协议头部
-- **格式转换**: 网络字节序和主机字节序转换
-- **错误检测**: 数据包格式验证
+### Packet Parser
+- **Protocol Parsing**: Automatic parsing of various protocol headers
+- **Format Conversion**: Network byte order and host byte order conversion
+- **Error Detection**: Packet format validation
 
-## 代码质量指标
+## Code Quality Metrics
 
-### 测试覆盖率
-- **单元测试**: 23 个测试用例，100% 通过
-- **功能测试**: 覆盖所有核心 API 和协议分析
-- **错误测试**: 覆盖所有错误情况
-- **边界测试**: 参数验证和边界条件
-- **协议测试**: TCP 状态机、选项解析、连接跟踪 (新增)
+### Test Coverage
+- **Unit Tests**: 23 test cases, 100% pass rate
+- **Functional Tests**: Cover all core APIs and protocol analysis
+- **Error Tests**: Cover all error conditions
+- **Boundary Tests**: Parameter validation and boundary conditions
+- **Protocol Tests**: TCP state machine, option parsing, connection tracking (New)
 
-### 代码风格
-- **C99 标准**: 严格遵循 C99 标准
-- **编译警告**: 无警告编译通过
-- **代码注释**: 详细的函数和结构体注释
-- **命名规范**: 一致的命名约定
+### Code Style
+- **C99 Standard**: Strictly follows C99 standard
+- **Compilation Warnings**: Compiles without warnings
+- **Code Comments**: Detailed function and structure comments
+- **Naming Conventions**: Consistent naming conventions
 
-### 文档完整性
-- **API 文档**: 100% API 覆盖
-- **示例代码**: 3 个完整示例
-- **安装指南**: 详细的构建和安装说明
-- **代码注释**: 内联文档注释
+### Documentation Completeness
+- **API Documentation**: 100% API coverage
+- **Example Code**: 3 complete examples
+- **Installation Guide**: Detailed build and installation instructions
+- **Code Comments**: Inline documentation comments
 
-## 性能特性
+## Performance Features
 
-### 内存管理
-- **零拷贝**: 最小化内存拷贝操作
-- **资源管理**: 自动清理和错误恢复
-- **缓冲区重用**: 数据包构造器可重复使用
+### Memory Management
+- **Zero Copy**: Minimize memory copy operations
+- **Resource Management**: Automatic cleanup and error recovery
+- **Buffer Reuse**: Packet constructors can be reused
 
-### 网络性能
-- **原始套接字**: 直接内核接口，最小延迟
-- **批量操作**: 支持连续数据包操作
-- **超时控制**: 可配置的超时机制
+### Network Performance
+- **Raw Sockets**: Direct kernel interface, minimal latency
+- **Batch Operations**: Support for continuous packet operations
+- **Timeout Control**: Configurable timeout mechanism
 
-## 安全考虑
+## Security Considerations
 
-### 权限模型
-- **最小权限**: 仅需要 CAP_NET_RAW 权限
-- **权限检查**: 运行时权限验证
-- **安全提示**: 用户权限提醒
+### Permission Model
+- **Minimum Privileges**: Only requires CAP_NET_RAW permission
+- **Permission Checking**: Runtime permission validation
+- **Security Hints**: User permission reminders
 
-### 输入验证
-- **参数检查**: 所有公共 API 参数验证
-- **缓冲区保护**: 防止缓冲区溢出
-- **格式验证**: 网络数据格式检查
+### Input Validation
+- **Parameter Checking**: All public API parameter validation
+- **Buffer Protection**: Prevent buffer overflows
+- **Format Validation**: Network data format checking
 
-## 兼容性
+## Compatibility
 
-### 平台支持
-- **Linux**: 完全支持和测试
-- **Unix 系统**: 应该兼容但未测试
-- **架构**: x86_64, ARM 等
+### Platform Support
+- **Linux**: Fully supported and tested
+- **Unix Systems**: Should be compatible but not tested
+- **Architecture**: x86_64, ARM, etc.
 
-### 编译器支持
-- **GCC**: 4.9+ (C99 支持)
-- **Clang**: 3.5+ (C99 支持)
-- **标准**: C99/C++11 兼容
+### Compiler Support
+- **GCC**: 4.9+ (C99 support)
+- **Clang**: 3.5+ (C99 support)
+- **Standard**: C99/C++11 compatible
 
-## 使用示例
+## Usage Examples
 
-### 简单 Ping
+### Simple Ping
 ```c
 #include <librawsock/rawsock.h>
 #include <librawsock/packet.h>
 
 int main() {
-    // 创建 raw socket
+    // Create raw socket
     rawsock_t* sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_ICMP);
-    
-    // 构造 ICMP 数据包
+
+    // Construct ICMP packet
     rawsock_packet_builder_t* builder = rawsock_packet_builder_create(1500);
     rawsock_packet_add_ipv4_header(builder, "0.0.0.0", "8.8.8.8", IPPROTO_ICMP, 64);
     rawsock_packet_add_icmp_header(builder, 8, 0, 1234, 1);
     rawsock_packet_finalize(builder);
-    
-    // 发送数据包
+
+    // Send packet
     const void* packet_data;
     size_t packet_size;
     rawsock_packet_get_data(builder, &packet_data, &packet_size);
     rawsock_send(sock, packet_data, packet_size, "8.8.8.8");
-    
-    // 清理资源
+
+    // Clean up resources
     rawsock_packet_builder_destroy(builder);
     rawsock_destroy(sock);
     return 0;
 }
 ```
 
-## 下一步改进
+## Next Improvements
 
-### 潜在增强功能
-- [ ] Windows 平台支持
-- [ ] 更多协议支持 (ARP, IPv6 扩展头等)
-- [ ] 异步 I/O 支持
-- [ ] 数据包过滤功能
-- [ ] 性能优化工具
+### Potential Enhancement Features
+- [ ] Windows platform support
+- [ ] More protocol support (ARP, IPv6 extension headers, etc.)
+- [ ] Asynchronous I/O support
+- [ ] Packet filtering functionality
+- [ ] Performance optimization tools
 
-### 工具和实用程序
-- [ ] 数据包分析工具
-- [ ] 网络诊断工具
-- [ ] 性能测试套件
-- [ ] 配置文件支持
+### Tools and Utilities
+- [ ] Packet analysis tools
+- [ ] Network diagnostic tools
+- [ ] Performance test suite
+- [ ] Configuration file support
 
-## 总结
+## Summary
 
-LibRawSock 已经完成了所有设计目标：
+LibRawSock has completed all design goals:
 
-1. **功能完整**: 提供了完整的 raw socket 编程接口
-2. **代码质量**: 高质量的 C 代码，符合行业标准
-3. **文档齐全**: 完整的 API 文档和使用示例
-4. **测试充分**: 全面的单元测试和示例程序
-5. **易于使用**: 清晰的 API 设计和详细的文档
+1. **Complete Functionality**: Provides complete raw socket programming interface
+2. **Code Quality**: High-quality C code that meets industry standards
+3. **Complete Documentation**: Complete API documentation and usage examples
+4. **Adequate Testing**: Comprehensive unit tests and example programs
+5. **Easy to Use**: Clear API design and detailed documentation
 
-该库可以作为网络编程、安全工具开发、网络诊断等场景的基础库使用，为开发者提供了强大而易用的 raw socket 编程接口。
+This library can be used as a foundation library for network programming, security tool development, network diagnostics and other scenarios, providing developers with a powerful and easy-to-use raw socket programming interface.

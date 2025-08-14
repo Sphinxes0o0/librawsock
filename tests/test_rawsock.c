@@ -42,20 +42,20 @@ int test_library_init(void) {
     /* Test initialization */
     rawsock_error_t err = rawsock_init();
     TEST_ASSERT(err == RAWSOCK_SUCCESS, "Library initialization should succeed");
-    
+
     /* Test multiple initializations (should be safe) */
     err = rawsock_init();
     TEST_ASSERT(err == RAWSOCK_SUCCESS, "Multiple initializations should be safe");
-    
+
     /* Test cleanup */
     rawsock_cleanup();  /* Should not crash */
     rawsock_cleanup();  /* Multiple cleanups should be safe */
-    
+
     /* Test version function */
     const char* version = rawsock_get_version();
     TEST_ASSERT(version != NULL, "Version string should not be NULL");
     TEST_ASSERT(strlen(version) > 0, "Version string should not be empty");
-    
+
     TEST_PASS("Library initialization and cleanup");
 }
 
@@ -65,26 +65,26 @@ int test_library_init(void) {
 int test_error_strings(void) {
     /* Test all error codes */
     const char* str;
-    
+
     str = rawsock_error_string(RAWSOCK_SUCCESS);
     TEST_ASSERT(str != NULL && strlen(str) > 0, "Success error string should be valid");
-    
+
     str = rawsock_error_string(RAWSOCK_ERROR_INVALID_PARAM);
     TEST_ASSERT(str != NULL && strlen(str) > 0, "Invalid param error string should be valid");
-    
+
     str = rawsock_error_string(RAWSOCK_ERROR_SOCKET_CREATE);
     TEST_ASSERT(str != NULL && strlen(str) > 0, "Socket create error string should be valid");
-    
+
     str = rawsock_error_string(RAWSOCK_ERROR_PERMISSION);
     TEST_ASSERT(str != NULL && strlen(str) > 0, "Permission error string should be valid");
-    
+
     str = rawsock_error_string(RAWSOCK_ERROR_UNKNOWN);
     TEST_ASSERT(str != NULL && strlen(str) > 0, "Unknown error string should be valid");
-    
+
     /* Test invalid error code */
     str = rawsock_error_string((rawsock_error_t)999);
     TEST_ASSERT(str != NULL, "Invalid error code should return valid string");
-    
+
     TEST_PASS("Error string functions");
 }
 
@@ -93,7 +93,7 @@ int test_error_strings(void) {
  */
 int test_privilege_check(void) {
     int has_privileges = rawsock_check_privileges();
-    
+
     if (geteuid() == 0) {
         /* Running as root */
         TEST_ASSERT(has_privileges == 1, "Root should have raw socket privileges");
@@ -102,7 +102,7 @@ int test_privilege_check(void) {
         printf("INFO: Running as non-root user, privilege check returned: %d\n", 
                has_privileges);
     }
-    
+
     TEST_PASS("Privilege checking");
 }
 
@@ -114,26 +114,26 @@ int test_socket_creation(void) {
     if (!rawsock_check_privileges()) {
         TEST_SKIP("Socket creation (requires root privileges)");
     }
-    
+
     /* Test basic socket creation */
     rawsock_t* sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_ICMP);
     if (!sock) {
         /* This might fail on some systems even with root privileges */
         TEST_SKIP("Socket creation (raw sockets may not be available)");
     }
-    
+
     TEST_ASSERT(sock != NULL, "Socket creation should succeed with root privileges");
-    
+
     /* Test last error function */
     rawsock_error_t last_error = rawsock_get_last_error(sock);
     TEST_ASSERT(last_error == RAWSOCK_SUCCESS, "Last error should be success after creation");
-    
+
     /* Destroy socket */
     rawsock_destroy(sock);
-    
+
     /* Test destruction of NULL socket */
     rawsock_destroy(NULL);  /* Should not crash */
-    
+
     /* Test socket creation with configuration */
     rawsock_config_t config = {
         .family = RAWSOCK_IPV4,
@@ -144,17 +144,17 @@ int test_socket_creation(void) {
         .broadcast = 0,
         .promiscuous = 0
     };
-    
+
     sock = rawsock_create_with_config(&config);
     if (sock) {
         TEST_ASSERT(sock != NULL, "Socket creation with config should succeed");
         rawsock_destroy(sock);
     }
-    
+
     /* Test invalid configuration */
     sock = rawsock_create_with_config(NULL);
     TEST_ASSERT(sock == NULL, "Socket creation with NULL config should fail");
-    
+
     TEST_PASS("Socket creation and destruction");
 }
 
@@ -166,32 +166,32 @@ int test_socket_options(void) {
     if (!rawsock_check_privileges()) {
         TEST_SKIP("Socket options (requires root privileges)");
     }
-    
+
     rawsock_t* sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_ICMP);
     if (!sock) {
         TEST_SKIP("Socket options (socket creation failed)");
     }
-    
+
     /* Test setting socket option */
     int option_value = 1;
     rawsock_error_t err = rawsock_set_option(sock, SO_REUSEADDR, 
                                             &option_value, sizeof(option_value));
     TEST_ASSERT(err == RAWSOCK_SUCCESS, "Setting socket option should succeed");
-    
+
     /* Test getting socket option */
     int retrieved_value;
     size_t value_size = sizeof(retrieved_value);
     err = rawsock_get_option(sock, SO_REUSEADDR, &retrieved_value, &value_size);
     TEST_ASSERT(err == RAWSOCK_SUCCESS, "Getting socket option should succeed");
     TEST_ASSERT(value_size == sizeof(retrieved_value), "Retrieved value size should match");
-    
+
     /* Test invalid parameters */
     err = rawsock_set_option(NULL, SO_REUSEADDR, &option_value, sizeof(option_value));
     TEST_ASSERT(err == RAWSOCK_ERROR_INVALID_PARAM, "Setting option on NULL socket should fail");
-    
+
     err = rawsock_get_option(sock, SO_REUSEADDR, NULL, &value_size);
     TEST_ASSERT(err == RAWSOCK_ERROR_INVALID_PARAM, "Getting option with NULL buffer should fail");
-    
+
     rawsock_destroy(sock);
     TEST_PASS("Socket options");
 }
@@ -203,19 +203,19 @@ int test_parameter_validation(void) {
     /* Test invalid parameters for socket creation */
     rawsock_t* sock = rawsock_create((rawsock_family_t)999, IPPROTO_ICMP);
     TEST_ASSERT(sock == NULL, "Socket creation with invalid family should fail");
-    
+
     /* Test invalid parameters for send function (without valid socket) */
     char test_data[] = "test";
-    
+
     /* All these should fail due to NULL socket */
     int result = rawsock_send(NULL, test_data, sizeof(test_data), "192.168.1.1");
     TEST_ASSERT(result < 0, "Send with NULL socket should fail");
-    
+
     /* Test error code for NULL parameters */
     rawsock_error_t error = rawsock_get_last_error(NULL);
     TEST_ASSERT(error == RAWSOCK_ERROR_INVALID_PARAM, 
                 "Getting error from NULL socket should return invalid param");
-    
+
     TEST_PASS("Parameter validation");
 }
 
@@ -227,14 +227,14 @@ int test_address_families(void) {
     if (!rawsock_check_privileges()) {
         TEST_SKIP("Address families (requires root privileges)");
     }
-    
+
     /* Test IPv4 socket creation */
     rawsock_t* ipv4_sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_ICMP);
     if (ipv4_sock) {
         TEST_ASSERT(ipv4_sock != NULL, "IPv4 socket creation should succeed");
         rawsock_destroy(ipv4_sock);
     }
-    
+
     /* Test IPv6 socket creation */
     rawsock_t* ipv6_sock = rawsock_create(RAWSOCK_IPV6, IPPROTO_ICMPV6);
     if (ipv6_sock) {
@@ -243,7 +243,7 @@ int test_address_families(void) {
     } else {
         printf("INFO: IPv6 socket creation failed (may not be available)\n");
     }
-    
+
     TEST_PASS("Address families");
 }
 
@@ -255,7 +255,7 @@ int test_timeout_functionality(void) {
     if (!rawsock_check_privileges()) {
         TEST_SKIP("Timeout functionality (requires root privileges)");
     }
-    
+
     /* Create socket with short timeout */
     rawsock_config_t config = {
         .family = RAWSOCK_IPV4,
@@ -266,18 +266,18 @@ int test_timeout_functionality(void) {
         .broadcast = 0,
         .promiscuous = 0
     };
-    
+
     rawsock_t* sock = rawsock_create_with_config(&config);
     if (!sock) {
         TEST_SKIP("Timeout functionality (socket creation failed)");
     }
-    
+
     /* Try to receive with timeout (should timeout quickly) */
     char buffer[1500];
     rawsock_packet_info_t packet_info;
-    
+
     int result = rawsock_recv(sock, buffer, sizeof(buffer), &packet_info);
-    
+
     /* Should timeout or receive something */
     if (result < 0) {
         rawsock_error_t error = -result;
@@ -289,7 +289,7 @@ int test_timeout_functionality(void) {
     } else {
         printf("INFO: Received %d bytes (may happen on busy networks)\n", result);
     }
-    
+
     rawsock_destroy(sock);
     TEST_PASS("Timeout functionality");
 }
@@ -300,9 +300,9 @@ int test_timeout_functionality(void) {
 int run_rawsock_tests(void) {
     int tests_passed = 0;
     int total_tests = 0;
-    
+
     printf("Running raw socket core functionality tests...\n\n");
-    
+
     total_tests++; if (test_library_init()) tests_passed++;
     total_tests++; if (test_error_strings()) tests_passed++;
     total_tests++; if (test_privilege_check()) tests_passed++;
@@ -311,10 +311,10 @@ int run_rawsock_tests(void) {
     total_tests++; if (test_parameter_validation()) tests_passed++;
     total_tests++; if (test_address_families()) tests_passed++;
     total_tests++; if (test_timeout_functionality()) tests_passed++;
-    
+
     printf("\n=== Raw Socket Test Results ===\n");
     printf("Tests passed: %d/%d\n", tests_passed, total_tests);
-    
+
     return (tests_passed == total_tests) ? 0 : 1;
 }
 

@@ -92,33 +92,33 @@ analyzer_destroy(ctx);
 ### Quick Start
 
 ```bash
-# 基本构建 (仅核心库)
+# Basic build (core library only)
 ./build.sh
 
-# 构建所有组件 (库+测试+示例+工具)
+# Build all components (library + tests + examples + tools)
 ./build.sh --all
 
-# Debug 构建并启用测试
+# Debug build with tests enabled
 ./build.sh --type Debug --tests --coverage
 ```
 
-### CMake 构建选项
+### CMake Build Options
 
 ```bash
-# 手动 CMake 构建
+# Manual CMake build
 mkdir build && cd build
 
-# 配置 (选择需要的组件)
+# Configure (select needed components)
 cmake -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_TESTS=ON \
       -DBUILD_EXAMPLES=ON \
       -DBUILD_TOOLS=ON \
       ..
 
-# 编译
+# Compile
 make -j$(nproc)
 
-# 安装
+# Install
 sudo make install
 ```
 

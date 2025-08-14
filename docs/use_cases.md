@@ -1,91 +1,91 @@
-# LibRawSock 使用用例
+# LibRawSock Use Cases
 
-本页给出基于现有示例与API的“可直接运行”的使用用例，涵盖网络监控、性能分析、故障排查与安全分析等典型场景。
+This page provides "ready-to-run" use cases based on existing examples and APIs, covering typical scenarios such as network monitoring, performance analysis, troubleshooting, and security analysis.
 
-- 先决条件
-  - Linux 系统，已安装构建工具（gcc/clang、cmake、make）
-  - 原始套接字需要 root 或 CAP_NET_RAW 权限（部分用例可使用演示模式免 root）
-  - 项目根目录执行构建脚本
+- Prerequisites
+  - Linux system, with build tools installed (gcc/clang, cmake, make)
+  - Raw sockets require root or CAP_NET_RAW permissions (some use cases can use demonstration mode without root)
+  - Execute build script in project root directory
 
 ```bash
-# 构建所有组件（库 + 测试 + 示例 + 工具）
+# Build all components (libraries + tests + examples + tools)
 ./build.sh --all
-# 或仅构建示例
+# Or only build examples
 ./build.sh --examples
 ```
 
-构建完成后，示例二进制位于 `build/bin/`。
+After building, example binaries are located in `build/bin/`.
 
-## 用例 1：ICMP Ping（网络连通性验证）
+## Use Case 1: ICMP Ping (Network Connectivity Verification)
 
-- 目标：验证到目标主机的连通性与往返时延（RTT）
-- 程序：`examples/ping.c`
-- 运行：
+- Target: Verify connectivity to target host and round-trip time (RTT)
+- Program: `examples/ping.c`
+- Run:
 ```bash
 sudo ./build/bin/ping 8.8.8.8 -c 3
 ```
-- 要点：
-  - 使用 `rawsock_packet_builder_*` 构造 IPv4 + ICMP 报文
-  - 使用 `rawsock_send`/`rawsock_recv` 发送接收
+- Key Points:
+  - Use `rawsock_packet_builder_*` to construct IPv4 + ICMP packet
+  - Use `rawsock_send`/`rawsock_recv` to send/receive
 
-## 用例 2：TCP SYN 扫描（端口可达性）
+## Use Case 2: TCP SYN Scan (Port Reachability)
 
-- 目标：快速判断目标主机端口开放情况
-- 程序：`examples/tcp_syn_scan.c`
-- 运行：
+- Target: Quickly determine if target host ports are open
+- Program: `examples/tcp_syn_scan.c`
+- Run:
 ```bash
 sudo ./build/bin/tcp_syn_scan 192.168.1.10 1 1024
 ```
-- 要点：
-  - 发送 SYN，依据对端返回 SYN-ACK/RST 判断端口状态
+- Key Points:
+  - Send SYN, determine port status based on SYN-ACK/RST from peer
 
-## 用例 3：数据包嗅探（基础抓包）
+## Use Case 3: Packet Sniffing (Basic Packet Capture)
 
-- 目标：在指定网卡实时抓取并打印基础包信息
-- 程序：`examples/packet_sniffer.c`
-- 运行：
+- Target: Capture and print basic packet information in real-time on specified network interface
+- Program: `examples/packet_sniffer.c`
+- Run:
 ```bash
 sudo ./build/bin/packet_sniffer eth0
 ```
-- 要点：
-  - 使用原始套接字接收，解析 IPv4/TCP/UDP/ICMP 头部
+- Key Points:
+  - Receive using raw sockets, parse IPv4/TCP/UDP/ICMP headers
 
-## 用例 4：TCP 连接分析（性能与状态）
+## Use Case 4: TCP Connection Analysis (Performance and State)
 
-- 目标：跟踪 TCP 连接状态、统计与性能（RTT、重传等）
-- 程序：`examples/tcp_connection_analyzer.c`
-- 运行：
+- Target: Track TCP connection state, statistics, and performance (RTT, retransmissions, etc.)
+- Program: `examples/tcp_connection_analyzer.c`
+- Run:
 ```bash
 sudo ./build/bin/tcp_connection_analyzer -v -s
 ```
-- 要点：
-  - `analyzer_create` + `tcp_analyzer_create` 注册处理器
-  - 设置 `connection_callback` / `data_callback`
-  - 输出连接状态、字节计数、平均 RTT 等
+- Key Points:
+  - `analyzer_create` + `tcp_analyzer_create` register handlers
+  - Set `connection_callback` / `data_callback`
+  - Output connection state, byte count, average RTT, etc.
 
-## 用例 5：简单 TCP 监控（轻量追踪）
+## Use Case 5: Simple TCP Monitoring (Lightweight Tracing)
 
-- 目标：以极简方式追踪一定数量的 TCP 连接
-- 程序：`examples/simple_tcp_monitor.c`
-- 运行：
+- Target: Trace a certain number of TCP connections in a minimal way
+- Program: `examples/simple_tcp_monitor.c`
+- Run:
 ```bash
 sudo ./build/bin/simple_tcp_monitor 50
 ```
 
-## 用例 6：TCP 分析演示（免 root 模拟）
+## Use Case 6: TCP Analysis Demonstration (Root-free Simulation)
 
-- 目标：无权限环境下快速体验 TCP 三次握手、HTTP 往返与连接关闭的分析流程
-- 程序：`examples/demo_tcp_analysis.c`
-- 运行（模拟）：
+- Target: Quickly experience the TCP three-way handshake, HTTP round-trip, and connection closure analysis process in an environment without root permissions
+- Program: `examples/demo_tcp_analysis.c`
+- Run (simulation):
 ```bash
 ./build/bin/demo_tcp_analysis -d -v
 ```
-- 要点：
-  - 通过 `rawsock_packet_builder_*` 构造并注入模拟包，驱动 `analyzer_process_packet`
+- Key Points:
+  - Construct and inject simulated packets using `rawsock_packet_builder_*`, drive `analyzer_process_packet`
 
-## 用例 7：库 API 内嵌最小示例
+## Use Case 7: Minimal Embedded Example of Library API
 
-- 原始套接字最小用法：
+- Minimal raw socket usage:
 ```c
 #include <librawsock/rawsock.h>
 
@@ -93,13 +93,13 @@ void example_send_icmp() {
     rawsock_t* sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_ICMP);
     if (!sock) return;
     uint8_t pkt[64] = {0};
-    /* 构造 pkt ... */
+    /* Construct pkt ... */
     (void)rawsock_send(sock, pkt, sizeof(pkt), "8.8.8.8");
     rawsock_destroy(sock);
 }
 ```
 
-- 协议分析最小用法：
+- Minimal protocol analysis usage:
 ```c
 #include <librawsock/analyzer.h>
 #include <librawsock/tcp_analyzer.h>
@@ -115,39 +115,39 @@ void example_analyze(const uint8_t* data, size_t len) {
 }
 ```
 
-## 用例 8：测试与覆盖率
+## Use Case 8: Testing and Coverage
 
 ```bash
-# 构建并运行全部单元测试
+# Build and run all unit tests
 ./build.sh --tests
 cd build && ctest --output-on-failure
 
-# 单独运行分类
+# Run by category
 ./build/bin/test_analyzer
 ./build/bin/test_packet
 ./build/bin/test_rawsock
 
-# Valgrind（如已安装）
+# Valgrind (if installed)
 ctest -L valgrind --output-on-failure
 
-# 覆盖率（配置时启用 -DENABLE_COVERAGE=ON）
+# Coverage (enabled with -DENABLE_COVERAGE=ON)
 make coverage
 ```
 
-## 用例 9：权限与故障排查
+## Use Case 9: Permissions and Troubleshooting
 
-- 原始套接字权限：
+- Raw socket permissions:
 ```bash
-# 以 root 运行，或授予二进制 CAP_NET_RAW
+# Run as root, or grant binary CAP_NET_RAW
 sudo setcap cap_net_raw=eip ./build/bin/packet_sniffer
 ```
-- 常见问题
-  - 非 root 收到 “Insufficient permissions”：使用 `sudo` 或 `setcap`
-  - IPv6 不可用：确认内核与系统启用 IPv6
-  - 接收超时：调整 `rawsock_create_with_config` 的 `recv_timeout_ms`
+- Common Issues
+  - Non-root receives "Insufficient permissions": Use `sudo` or `setcap`
+  - IPv6 not available: Confirm kernel and system enable IPv6
+  - Receive timeout: Adjust `rawsock_create_with_config`'s `recv_timeout_ms`
 
-## 关联文档
+## Related Documents
 
-- API 参考：`docs/api.md`
-- TCP 分析器指南：`docs/tcp_usage_guide.md`
-- 示例源码：`examples/`
+- API Reference: `docs/api.md`
+- TCP Analyzer Guide: `docs/tcp_usage_guide.md`
+- Example Source Code: `examples/`

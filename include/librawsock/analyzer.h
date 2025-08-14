@@ -119,7 +119,7 @@ typedef struct {
     struct timeval timestamp;         /**< Packet timestamp */
     analyzer_flow_id_t flow_id;       /**< Flow identifier */
     analyzer_direction_t direction;   /**< Packet direction */
-    
+
     /* Protocol-specific data pointers */
     const void* ip_header;            /**< IP header pointer */
     const void* transport_header;     /**< Transport header pointer */
@@ -171,19 +171,19 @@ struct analyzer_connection {
     analyzer_flow_id_t flow_id;        /**< Connection identifier */
     analyzer_state_t state;            /**< Connection state */
     analyzer_stats_t stats;            /**< Connection statistics */
-    
+
     /* Protocol-specific state */
     analyzer_protocol_handler_t* handler;  /**< Protocol handler */
     void* protocol_state;               /**< Protocol-specific state data */
-    
+
     /* Reassembly buffers */
     uint8_t* reassembly_buffer[2];      /**< Reassembly buffers [forward, reverse] */
     size_t reassembly_size[2];          /**< Current buffer sizes */
     size_t reassembly_capacity[2];      /**< Buffer capacities */
-    
+
     /* Hash table linkage */
     analyzer_connection_t* next;        /**< Next connection in hash bucket */
-    
+
     /* Timeout management */
     struct timeval last_activity;      /**< Last activity timestamp */
     uint8_t timeout_pending;           /**< Timeout flag */
@@ -208,22 +208,22 @@ struct analyzer_context {
     analyzer_config_t config;                              /**< Configuration */
     analyzer_connection_t* connection_table[1024];         /**< Connection hash table */
     analyzer_protocol_handler_t* handlers[256];            /**< Protocol handlers */
-    
+
     /* Statistics */
     uint64_t total_packets;             /**< Total packets processed */
     uint64_t total_connections;         /**< Total connections seen */
     uint64_t active_connections;        /**< Currently active connections */
     uint64_t dropped_packets;           /**< Dropped packets */
-    
+
     /* Memory management */
     analyzer_connection_t* free_connections;   /**< Free connection pool */
     size_t allocated_connections;       /**< Allocated connections */
-    
+
     /* Callbacks */
     void (*connection_callback)(analyzer_context_t* ctx, analyzer_connection_t* conn, analyzer_result_t result);
     void (*data_callback)(analyzer_context_t* ctx, analyzer_connection_t* conn, 
                          analyzer_direction_t dir, const uint8_t* data, size_t size);
-    
+
     void* user_data;                    /**< User data pointer */
 };
 

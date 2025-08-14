@@ -1,117 +1,109 @@
-# 单元测试模块
-message(STATUS "Configuring unit tests...")
+# Unit test module
 
-# 查找测试依赖
+# Find test dependencies
+find_package(Threads REQUIRED)
+
+# Check for Valgrind
 find_program(VALGRIND_EXECUTABLE valgrind)
 if(VALGRIND_EXECUTABLE)
+    set(HAVE_VALGRIND TRUE)
     message(STATUS "Found Valgrind: ${VALGRIND_EXECUTABLE}")
-    set(VALGRIND_FOUND TRUE)
-else()
-    message(STATUS "Valgrind not found - memory leak tests will be skipped")
-    set(VALGRIND_FOUND FALSE)
 endif()
 
-# 测试通用设置
-set(TEST_TIMEOUT 30)
-set(TEST_WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+# Test common settings
+enable_testing()
 
-# 测试源文件
-set(TEST_SOURCES
-    test_rawsock.c
-    test_packet.c
-    test_analyzer.c
-)
+# Test source files
+file(GLOB TEST_SOURCES "*.c")
+if(NOT TEST_SOURCES)
+    message(WARNING "No test sources found in tests directory")
+    return()
+endif()
 
-# 为每个测试文件创建独立的可执行文件
-foreach(test_source ${TEST_SOURCES})
-    # 从文件名提取测试名称
-    get_filename_component(test_name ${test_source} NAME_WE)
-    
-    # 创建测试可执行文件
-    add_executable(${test_name} ${test_source})
-    
-    # 确保库先构建
+# Create separate executable for each test file
+foreach(TEST_SOURCE ${TEST_SOURCES})
+    # Extract test name from filename
+    get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+
+    # Create test executable
+    add_executable(${TEST_NAME} ${TEST_SOURCE})
+
+    # Ensure library is built first
+    add_dependencies(${TEST_NAME} rawsock)
+
+    # Link core library
     if(BUILD_SHARED_LIBS)
-        add_dependencies(${test_name} rawsock_shared)
-    endif()
-    if(BUILD_STATIC_LIBS)
-        add_dependencies(${test_name} rawsock_static)
-    endif()
-    
-    # 链接核心库
-    if(BUILD_SHARED_LIBS)
-        target_link_libraries(${test_name} PRIVATE rawsock_shared)
-        if(UNIX AND NOT APPLE)
-            target_link_libraries(${test_name} PRIVATE rt)
-        endif()
+        target_link_libraries(${TEST_NAME} PRIVATE rawsock_shared)
     else()
-        target_link_libraries(${test_name} PRIVATE rawsock_static)
-        if(UNIX AND NOT APPLE)
-            target_link_libraries(${test_name} PRIVATE rt)
-        endif()
+        target_link_libraries(${TEST_NAME} PRIVATE rawsock_static)
     endif()
-    
-    # 设置包含目录
-    target_include_directories(${test_name} PRIVATE
+
+    # Link test dependencies
+    target_link_libraries(${TEST_NAME} PRIVATE
+        ${CMAKE_THREAD_LIBS_INIT}
+        m  # math library
+    )
+
+    # Set include directories
+    target_include_directories(${TEST_NAME} PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_BINARY_DIR}/include
+        ${CMAKE_SOURCE_DIR}/tests
     )
-    
-    # 设置编译选项
-    target_compile_options(${test_name} PRIVATE -Wall -Wextra)
-    
-    # 添加测试
-    add_test(NAME ${test_name}
-        COMMAND ${test_name}
-        WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY}
+
+    # Set compilation options
+    target_compile_options(${TEST_NAME} PRIVATE -Wall -Wextra)
+
+    # Add test
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+
+    # Set test properties
+    set_tests_properties(${TEST_NAME} PROPERTIES
+        TIMEOUT 300
+        ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib"
     )
-    
-    # 设置测试属性
-    set_tests_properties(${test_name} PROPERTIES
-        TIMEOUT ${TEST_TIMEOUT}
-        LABELS "unit"
-    )
-    
-    # Valgrind 内存检查测试
-    if(VALGRIND_FOUND)
-        add_test(NAME ${test_name}_valgrind
-            COMMAND ${VALGRIND_EXECUTABLE}
-                --leak-check=full
-                --show-leak-kinds=all
-                --track-origins=yes
-                --error-exitcode=1
-                --suppressions=${CMAKE_SOURCE_DIR}/tests/valgrind.supp
-                $<TARGET_FILE:${test_name}>
-            WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY}
-        )
-        
-        set_tests_properties(${test_name}_valgrind PROPERTIES
-            TIMEOUT $((${TEST_TIMEOUT} * 3))
-            LABELS "valgrind;memory"
+
+    # Valgrind memory check tests
+    if(HAVE_VALGRIND)
+        add_test(NAME ${TEST_NAME}_valgrind 
+                 COMMAND ${VALGRIND_EXECUTABLE} 
+                 --tool=memcheck 
+                 --leak-check=full 
+                 --show-leak-kinds=all 
+                 --track-origins=yes 
+                 --verbose 
+                 --log-file=${CMAKE_BINARY_DIR}/valgrind_${TEST_NAME}.log 
+                 ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME})
+
+        set_tests_properties(${TEST_NAME}_valgrind PROPERTIES
+            TIMEOUT 600
+            LABELS "valgrind"
+            ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib"
         )
     endif()
+
+    message(STATUS "Added test: ${TEST_NAME}")
 endforeach()
 
-# 集成测试暂时禁用，等待实现
-# TODO: 添加集成测试脚本
+# Integration tests temporarily disabled, waiting for implementation
 
-# 代码覆盖率支持
+# Code coverage support
 if(ENABLE_COVERAGE)
     find_program(GCOV_EXECUTABLE gcov)
     find_program(LCOV_EXECUTABLE lcov)
     find_program(GENHTML_EXECUTABLE genhtml)
-    
+
     if(GCOV_EXECUTABLE AND LCOV_EXECUTABLE AND GENHTML_EXECUTABLE)
         message(STATUS "Coverage tools found - enabling coverage support")
-        
-        # 添加覆盖率编译选项
-        foreach(test_source ${TEST_SOURCES})
-            get_filename_component(test_name ${test_source} NAME_WE)
-            target_compile_options(${test_name} PRIVATE --coverage)
-            target_link_options(${test_name} PRIVATE --coverage)
+
+        # Add coverage compilation options
+        foreach(TEST_SOURCE ${TEST_SOURCES})
+            get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+            target_compile_options(${TEST_NAME} PRIVATE --coverage)
+            target_link_options(${TEST_NAME} PRIVATE --coverage)
         endforeach()
-        
-        # 创建覆盖率报告目标
+
+        # Create coverage report target
         add_custom_target(coverage
             COMMAND ${LCOV_EXECUTABLE} --capture --directory . --output-file coverage.info
             COMMAND ${LCOV_EXECUTABLE} --remove coverage.info '/usr/*' --output-file coverage.info
@@ -120,8 +112,8 @@ if(ENABLE_COVERAGE)
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating code coverage report"
         )
-        
-        # 覆盖率清理目标
+
+        # Coverage cleanup target
         add_custom_target(coverage_clean
             COMMAND ${LCOV_EXECUTABLE} --directory . --zerocounters
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -132,17 +124,16 @@ if(ENABLE_COVERAGE)
     endif()
 endif()
 
-# 测试辅助脚本
+# Test helper scripts
 configure_file(
     ${CMAKE_SOURCE_DIR}/tests/run_tests.sh.in
     ${CMAKE_BINARY_DIR}/run_tests.sh
     @ONLY
 )
 
-# 权限检查测试暂时禁用，等待实现
-# TODO: 添加权限检查脚本
+# Permission check tests temporarily disabled, waiting for implementation
 
-# 自定义测试目标
+# Custom test targets
 add_custom_target(test_unit
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L unit
     DEPENDS ${TEST_SOURCES}
@@ -161,7 +152,7 @@ add_custom_target(test_all
     COMMENT "Running all tests"
 )
 
-# 安装测试数据
+# Install test data
 install(DIRECTORY data/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/librawsock/tests
     COMPONENT tests

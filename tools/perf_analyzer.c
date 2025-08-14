@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     int packets = 100;
     int threads = 1;
     int verbose = 0;
-    
+
     static struct option long_options[] = {
         {"connections", required_argument, 0, 'c'},
         {"packets", required_argument, 0, 'p'},
@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
-    
+
     int opt;
     while ((opt = getopt_long(argc, argv, "c:p:t:vh", long_options, NULL)) != -1) {
         switch (opt) {
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
                 return 1;
         }
     }
-    
+
     printf("LibRawSock Performance Analyzer\n");
     printf("===============================\n");
     printf("Connections: %d\n", connections);
@@ -69,54 +69,54 @@ int main(int argc, char* argv[]) {
     printf("Threads: %d\n", threads);
     printf("Total packets: %d\n", connections * packets);
     printf("\n");
-    
-    // 创建分析器
+
+    // Create analyzer
     analyzer_context_t* ctx = analyzer_create();
     if (!ctx) {
         fprintf(stderr, "Failed to create analyzer context\n");
         return 1;
     }
-    
+
     analyzer_protocol_handler_t* tcp_handler = tcp_analyzer_create();
     if (!tcp_handler) {
         fprintf(stderr, "Failed to create TCP handler\n");
         analyzer_destroy(ctx);
         return 1;
     }
-    
+
     analyzer_register_handler(ctx, tcp_handler);
-    
-    // 运行性能测试
+
+    // Run performance test
     clock_t start = clock();
-    
-    // 这里实现具体的性能测试逻辑
+
+    // Implement specific performance test logic here
     printf("Running performance analysis...\n");
-    
-    // 模拟数据包处理
+
+    // Simulate packet processing
     for (int i = 0; i < connections * packets; i++) {
-        // 模拟数据包处理
+        // Simulate packet processing
         uint8_t dummy_packet[64] = {0};
         struct timeval timestamp = {0, 0};
         analyzer_process_packet(ctx, dummy_packet, sizeof(dummy_packet), &timestamp);
-        
+
         if (verbose && (i + 1) % 10000 == 0) {
             printf("Processed %d packets\n", i + 1);
         }
     }
-    
+
     clock_t end = clock();
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
-    
+
     printf("\nPerformance Results:\n");
     printf("===================\n");
     printf("Total time: %.3f seconds\n", elapsed);
     printf("Packets per second: %.0f\n", (connections * packets) / elapsed);
     printf("Connections: %lu total, %lu active\n", 
            ctx->total_connections, ctx->active_connections);
-    
-    // 清理
+
+    // Cleanup
     tcp_analyzer_destroy(tcp_handler);
     analyzer_destroy(ctx);
-    
+
     return 0;
 }

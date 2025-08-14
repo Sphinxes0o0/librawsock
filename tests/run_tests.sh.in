@@ -1,29 +1,29 @@
 #!/bin/bash
 
-# LibRawSock 测试运行脚本
-# 自动生成的脚本，用于运行所有测试
+# LibRawSock test runner script
+# Auto-generated script for running all tests
 
 set -e
 
-# 构建信息
+# Build information
 BUILD_DIR="@CMAKE_BINARY_DIR@"
 SOURCE_DIR="@CMAKE_SOURCE_DIR@"
 PROJECT_VERSION="@PROJECT_VERSION@"
 
-cd "$BUILD_DIR"
-
-echo "LibRawSock 测试套件 v${PROJECT_VERSION}"
-echo "========================================"
-echo "构建目录: $BUILD_DIR"
-echo "源码目录: $SOURCE_DIR"
+echo "=========================================="
+echo "LibRawSock Test Suite v${PROJECT_VERSION}"
+echo "=========================================="
+echo "Build directory: $BUILD_DIR"
+echo "Source directory: $SOURCE_DIR"
 echo ""
 
-# 设置库路径
+# Set library path
 export LD_LIBRARY_PATH="$BUILD_DIR/lib:$LD_LIBRARY_PATH"
 
-# 运行所有测试
-echo "运行所有测试..."
-ctest --output-on-failure --parallel 4
+# Run all tests
+echo "Running all tests..."
+cd "$BUILD_DIR"
+ctest --output-on-failure
 
 echo ""
-echo "测试完成！"
+echo "Tests completed!"

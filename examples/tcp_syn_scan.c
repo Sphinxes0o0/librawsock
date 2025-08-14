@@ -52,14 +52,14 @@ uint32_t get_random_seq(void) {
  */
 int scan_port(rawsock_t* sock, rawsock_packet_builder_t* builder,
               const char* target_ip, uint16_t target_port) {
-    
+
     /* Reset packet builder */
     rawsock_packet_builder_reset(builder);
-    
+
     /* Generate random source port and sequence number */
     uint16_t src_port = get_random_src_port();
     uint32_t seq_num = get_random_seq();
-    
+
     /* Add IP header */
     rawsock_error_t err = rawsock_packet_add_ipv4_header(builder, "0.0.0.0", 
                                                         target_ip, IPPROTO_TCP, 64);
@@ -68,7 +68,7 @@ int scan_port(rawsock_t* sock, rawsock_packet_builder_t* builder,
                 rawsock_error_string(err));
         return -1;
     }
-    
+
     /* Add TCP header with SYN flag */
     err = rawsock_packet_add_tcp_header(builder, src_port, target_port,
                                        seq_num, 0, TCP_FLAG_SYN, 8192);
@@ -77,7 +77,7 @@ int scan_port(rawsock_t* sock, rawsock_packet_builder_t* builder,
                 rawsock_error_string(err));
         return -1;
     }
-    
+
     /* Finalize packet */
     err = rawsock_packet_finalize(builder);
     if (err != RAWSOCK_SUCCESS) {
@@ -85,7 +85,7 @@ int scan_port(rawsock_t* sock, rawsock_packet_builder_t* builder,
                 rawsock_error_string(err));
         return -1;
     }
-    
+
     /* Get packet data */
     const void* packet_data;
     size_t packet_size;
@@ -95,7 +95,7 @@ int scan_port(rawsock_t* sock, rawsock_packet_builder_t* builder,
                 rawsock_error_string(err));
         return -1;
     }
-    
+
     /* Send packet */
     int sent = rawsock_send(sock, packet_data, packet_size, target_ip);
     if (sent < 0) {
@@ -103,10 +103,10 @@ int scan_port(rawsock_t* sock, rawsock_packet_builder_t* builder,
                 target_port, rawsock_error_string(-sent));
         return -1;
     }
-    
+
     printf("SYN packet sent to %s:%d (src_port: %d, seq: %u)\n",
            target_ip, target_port, src_port, seq_num);
-    
+
     return 0;
 }
 
@@ -118,11 +118,11 @@ int main(int argc, char* argv[]) {
         print_usage(argv[0]);
         return 1;
     }
-    
+
     const char* target_ip = argv[1];
     int start_port = atoi(argv[2]);
     int end_port = atoi(argv[3]);
-    
+
     /* Validate port range */
     if (start_port < 1 || start_port > 65535 ||
         end_port < 1 || end_port > 65535 ||
@@ -130,16 +130,16 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Error: Invalid port range\n");
         return 1;
     }
-    
+
     /* Check privileges */
     if (!rawsock_check_privileges()) {
         fprintf(stderr, "Error: This program requires root privileges or CAP_NET_RAW capability\n");
         return 1;
     }
-    
+
     /* Initialize random seed */
     srand(time(NULL));
-    
+
     /* Initialize library */
     rawsock_error_t err = rawsock_init();
     if (err != RAWSOCK_SUCCESS) {
@@ -147,14 +147,14 @@ int main(int argc, char* argv[]) {
                 rawsock_error_string(err));
         return 1;
     }
-    
+
     /* Create raw socket for TCP */
     rawsock_t* sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_TCP);
     if (!sock) {
         fprintf(stderr, "Error: Failed to create raw socket\n");
         return 1;
     }
-    
+
     /* Create packet builder */
     rawsock_packet_builder_t* builder = rawsock_packet_builder_create(1500);
     if (!builder) {
@@ -162,22 +162,22 @@ int main(int argc, char* argv[]) {
         rawsock_destroy(sock);
         return 1;
     }
-    
+
     printf("Starting TCP SYN scan of %s\n", target_ip);
     printf("Scanning ports %d-%d...\n\n", start_port, end_port);
-    
+
     int total_ports = end_port - start_port + 1;
     int scanned = 0;
-    
+
     /* Scan each port */
     for (int port = start_port; port <= end_port; port++) {
         if (scan_port(sock, builder, target_ip, port) == 0) {
             scanned++;
         }
-        
+
         /* Small delay between packets to avoid overwhelming the target */
         usleep(10000);  /* 10ms delay */
-        
+
         /* Progress indicator */
         if ((port - start_port + 1) % 100 == 0 || port == end_port) {
             printf("\nProgress: %d/%d ports scanned (%.1f%%)\n",
@@ -185,17 +185,17 @@ int main(int argc, char* argv[]) {
                    100.0 * (port - start_port + 1) / total_ports);
         }
     }
-    
+
     printf("\nScan completed. %d SYN packets sent.\n", scanned);
     printf("\nNote: This scanner only sends SYN packets. To detect open ports,\n");
     printf("you would need to listen for SYN-ACK responses using a separate\n");
     printf("receiving socket or packet capture mechanism.\n");
-    
+
     /* Cleanup */
     rawsock_packet_builder_destroy(builder);
     rawsock_destroy(sock);
     rawsock_cleanup();
-    
+
     return 0;
 }
 

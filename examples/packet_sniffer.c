@@ -38,10 +38,10 @@ void signal_handler(int sig) {
 void format_timestamp(uint64_t timestamp_us, char* buffer, size_t buffer_size) {
     time_t seconds = timestamp_us / 1000000;
     int microseconds = timestamp_us % 1000000;
-    
+
     struct tm* tm_info = localtime(&seconds);
     strftime(buffer, buffer_size, "%H:%M:%S", tm_info);
-    
+
     /* Append microseconds */
     size_t len = strlen(buffer);
     snprintf(buffer + len, buffer_size - len, ".%06d", microseconds);
@@ -65,41 +65,41 @@ void print_ip_address(const void* addr_bin, rawsock_family_t family) {
 void parse_ipv4_packet(const uint8_t* packet_data, size_t packet_size, 
                       uint64_t timestamp) {
     rawsock_ipv4_header_t ip_header;
-    
+
     if (rawsock_parse_ipv4_header(packet_data, packet_size, &ip_header) != RAWSOCK_SUCCESS) {
         printf("Failed to parse IPv4 header\n");
         return;
     }
-    
+
     /* Format timestamp */
     char time_str[32];
     format_timestamp(timestamp, time_str, sizeof(time_str));
-    
+
     printf("[%s] IPv4: ", time_str);
-    
+
     /* Convert addresses for display */
     uint32_t src_addr_net = htonl(ip_header.src_addr);
     uint32_t dst_addr_net = htonl(ip_header.dst_addr);
-    
+
     print_ip_address(&src_addr_net, RAWSOCK_IPV4);
     printf(" -> ");
     print_ip_address(&dst_addr_net, RAWSOCK_IPV4);
-    
+
     printf(" (proto=%d, len=%d, ttl=%d, id=0x%04x)",
            ip_header.protocol, ip_header.total_length, 
            ip_header.ttl, ip_header.id);
-    
+
     /* Parse transport layer if enough data */
     size_t ip_header_len = (ip_header.version_ihl & 0x0F) * 4;
     if (packet_size > ip_header_len) {
         const uint8_t* transport_data = packet_data + ip_header_len;
         size_t transport_size = packet_size - ip_header_len;
-        
+
         if (ip_header.protocol == IPPROTO_TCP && transport_size >= 20) {
             rawsock_tcp_header_t tcp_header;
             if (rawsock_parse_tcp_header(transport_data, transport_size, &tcp_header) == RAWSOCK_SUCCESS) {
                 printf(" TCP %d->%d", tcp_header.src_port, tcp_header.dst_port);
-                
+
                 /* Display TCP flags */
                 printf(" [");
                 if (tcp_header.flags & 0x02) printf("SYN ");
@@ -109,7 +109,7 @@ void parse_ipv4_packet(const uint8_t* packet_data, size_t packet_size,
                 if (tcp_header.flags & 0x08) printf("PSH ");
                 if (tcp_header.flags & 0x20) printf("URG ");
                 printf("]");
-                
+
                 printf(" seq=%u ack=%u win=%d",
                        tcp_header.seq_num, tcp_header.ack_num, tcp_header.window);
             }
@@ -126,7 +126,7 @@ void parse_ipv4_packet(const uint8_t* packet_data, size_t packet_size,
             if (rawsock_parse_icmp_header(transport_data, transport_size, &icmp_header) == RAWSOCK_SUCCESS) {
                 printf(" ICMP type=%d code=%d",
                        icmp_header.type, icmp_header.code);
-                
+
                 if (icmp_header.type == 8 || icmp_header.type == 0) {
                     printf(" id=%d seq=%d",
                            icmp_header.data.echo.id, icmp_header.data.echo.sequence);
@@ -134,7 +134,7 @@ void parse_ipv4_packet(const uint8_t* packet_data, size_t packet_size,
             }
         }
     }
-    
+
     printf("\n");
 }
 
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
     int count = 0;              /* 0 = continuous */
     int protocol = 0;           /* 0 = all protocols */
     int opt;
-    
+
     /* Parse command line arguments */
     while ((opt = getopt(argc, argv, "c:p:h")) != -1) {
         switch (opt) {
@@ -188,13 +188,13 @@ int main(int argc, char* argv[]) {
                 return 1;
         }
     }
-    
+
     /* Check privileges */
     if (!rawsock_check_privileges()) {
         fprintf(stderr, "Error: This program requires root privileges or CAP_NET_RAW capability\n");
         return 1;
     }
-    
+
     /* Initialize library */
     rawsock_error_t err = rawsock_init();
     if (err != RAWSOCK_SUCCESS) {
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
                 rawsock_error_string(err));
         return 1;
     }
-    
+
     /* Create configuration for promiscuous mode */
     rawsock_config_t config = {
         .family = RAWSOCK_IPV4,
@@ -213,18 +213,18 @@ int main(int argc, char* argv[]) {
         .broadcast = 0,
         .promiscuous = 1
     };
-    
+
     /* Create raw socket */
     rawsock_t* sock = rawsock_create_with_config(&config);
     if (!sock) {
         fprintf(stderr, "Error: Failed to create raw socket\n");
         return 1;
     }
-    
+
     /* Set up signal handler */
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
-    
+
     printf("Starting packet capture...\n");
     if (protocol) {
         const char* proto_name = (protocol == IPPROTO_TCP) ? "TCP" :
@@ -234,22 +234,22 @@ int main(int argc, char* argv[]) {
     } else {
         printf("Capturing all packets\n");
     }
-    
+
     if (count > 0) {
         printf("Will capture %d packets\n", count);
     } else {
         printf("Press Ctrl+C to stop\n");
     }
     printf("\n");
-    
+
     /* Packet capture loop */
     uint8_t buffer[65536];
     while (g_running && (count == 0 || g_packets_captured < count)) {
         rawsock_packet_info_t packet_info;
-        
+
         /* Receive packet */
         int received = rawsock_recv(sock, buffer, sizeof(buffer), &packet_info);
-        
+
         if (received < 0) {
             rawsock_error_t error = -received;
             if (error == RAWSOCK_ERROR_TIMEOUT) {
@@ -260,17 +260,17 @@ int main(int argc, char* argv[]) {
                 break;
             }
         }
-        
+
         if (received == 0) {
             continue;  /* No data received */
         }
-        
+
         g_packets_captured++;
-        
+
         /* Parse and display packet */
         if (received >= 20) {  /* Minimum IPv4 header size */
             uint8_t version = (buffer[0] >> 4) & 0x0F;
-            
+
             if (version == 4) {
                 parse_ipv4_packet(buffer, received, packet_info.timestamp_us);
             } else if (version == 6) {
@@ -282,15 +282,15 @@ int main(int argc, char* argv[]) {
             printf("Packet too small: %d bytes\n", received);
         }
     }
-    
+
     /* Print statistics */
     printf("\n--- Capture Statistics ---\n");
     printf("Packets captured: %d\n", g_packets_captured);
-    
+
     /* Cleanup */
     rawsock_destroy(sock);
     rawsock_cleanup();
-    
+
     return 0;
 }
 
