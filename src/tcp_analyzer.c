@@ -1,7 +1,7 @@
 /**
  * @file tcp_analyzer.c
  * @brief TCP Protocol Analyzer Implementation
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  */
 

@@ -59,7 +59,7 @@ install(FILES ${CMAKE_BINARY_DIR}/librawsock.pc
 set(CPACK_PACKAGE_NAME "librawsock")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Raw Socket Network Library with TCP Protocol Analysis")
-set(CPACK_PACKAGE_VENDOR "LibRawSock Team")
+set(CPACK_PACKAGE_VENDOR "Sphinxes0o0")
 set(CPACK_PACKAGE_CONTACT "librawsock@example.com")
 set(CPACK_GENERATOR "TGZ;DEB")
 

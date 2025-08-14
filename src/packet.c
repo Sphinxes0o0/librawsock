@@ -1,7 +1,7 @@
 /**
  * @file packet.c
  * @brief Packet construction and parsing utilities implementation
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  */
 

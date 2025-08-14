@@ -1,7 +1,7 @@
 /**
  * @file test_rawsock.c
  * @brief Unit tests for raw socket core functionality
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  */
 
 #include <stdio.h>

@@ -1,7 +1,7 @@
 /**
  * @file test_analyzer.c
  * @brief Unit tests for protocol analyzer framework
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  */
 
 #include <stdio.h>

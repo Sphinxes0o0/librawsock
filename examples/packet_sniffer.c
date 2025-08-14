@@ -1,7 +1,7 @@
 /**
  * @file packet_sniffer.c
  * @brief Simple packet sniffer using librawsock
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * 
  * This example demonstrates how to capture and parse network packets
  * using the librawsock library.

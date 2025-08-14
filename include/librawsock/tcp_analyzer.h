@@ -1,7 +1,7 @@
 /**
  * @file tcp_analyzer.h
  * @brief TCP Protocol Analyzer
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  * 
  * This module provides comprehensive TCP protocol analysis including

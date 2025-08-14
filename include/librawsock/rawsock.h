@@ -1,7 +1,7 @@
 /**
  * @file rawsock.h
  * @brief Raw Socket Network Library - Main API
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  * 
  * This library provides a clean, cross-platform interface for raw socket

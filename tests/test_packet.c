@@ -1,7 +1,7 @@
 /**
  * @file test_packet.c
  * @brief Unit tests for packet construction and parsing
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  */
 
 #include <stdio.h>

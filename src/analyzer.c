@@ -1,7 +1,7 @@
 /**
  * @file analyzer.c
  * @brief Extensible Protocol Analyzer Framework Implementation
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  */
 

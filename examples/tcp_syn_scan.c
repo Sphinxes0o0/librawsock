@@ -1,7 +1,7 @@
 /**
  * @file tcp_syn_scan.c
  * @brief TCP SYN port scanner using librawsock
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * 
  * This example demonstrates how to create and send TCP SYN packets
  * for port scanning using the librawsock library.

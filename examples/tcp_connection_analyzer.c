@@ -1,7 +1,7 @@
 /**
  * @file tcp_connection_analyzer.c
  * @brief TCP Connection Analysis Tool
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * 
  * This example demonstrates the TCP protocol analyzer capabilities,
  * including connection state tracking, RTT measurement, and performance analysis.

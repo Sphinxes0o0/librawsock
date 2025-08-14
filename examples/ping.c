@@ -1,7 +1,7 @@
 /**
  * @file ping.c
  * @brief Simple ping implementation using librawsock
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * 
  * This example demonstrates how to create and send ICMP echo request packets
  * using the librawsock library.

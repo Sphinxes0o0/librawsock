@@ -1,7 +1,7 @@
 /**
  * @file simple_tcp_monitor.c
  * @brief Simple TCP Connection Monitor
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * 
  * A simpler example showing basic TCP connection monitoring
  * with state tracking and basic statistics.

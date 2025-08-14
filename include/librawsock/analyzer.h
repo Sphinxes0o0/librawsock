@@ -1,7 +1,7 @@
 /**
  * @file analyzer.h
  * @brief Extensible Protocol Analyzer Framework
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  * 
  * This module provides an extensible framework for protocol analysis,

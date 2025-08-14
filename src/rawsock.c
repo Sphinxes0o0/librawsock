@@ -1,7 +1,7 @@
 /**
  * @file rawsock.c
  * @brief Raw Socket Network Library - Core Implementation
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  */
 

@@ -1,7 +1,7 @@
 /**
  * @file packet.h
  * @brief Packet construction and parsing utilities
- * @author LibRawSock Team
+ * @author Sphinxes0o0
  * @version 1.0.0
  * 
  * This module provides utilities for constructing and parsing network packets
