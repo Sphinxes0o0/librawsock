@@ -1,13 +1,10 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=${prefix}
-libdir=@CMAKE_INSTALL_FULL_LIBDIR@
-includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
 
 Name: librawsock
-Description: Raw Socket Network Library with TCP Protocol Analysis
+Description: Simple raw socket library
 Version: @PROJECT_VERSION@
-URL: https://github.com/yourusername/librawsock
-Requires:
-Libs: -L${libdir} -lrawsock
-Libs.private: @LIBRAWSOCK_PRIVATE_LIBS@
 Cflags: -I${includedir}
+Libs: -L${libdir} -lrawsock

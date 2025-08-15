@@ -19,8 +19,12 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <time.h>
-#include <linux/if_packet.h>
 #include <sys/ioctl.h>
+
+/* Platform-specific headers */
+#ifdef __linux__
+#include <linux/if_packet.h>
+#endif
 
 /* For SO_BINDTODEVICE */
 #ifndef SO_BINDTODEVICE
@@ -32,7 +36,12 @@
 #define IFNAMSIZ 16
 #endif
 
-#include "librawsock/rawsock.h"
+/* For SOCK_CLOEXEC (not available on all platforms) */
+#ifndef SOCK_CLOEXEC
+#define SOCK_CLOEXEC 0
+#endif
+
+#include "rawsock.h"
 
 /**
  * @brief Internal raw socket structure

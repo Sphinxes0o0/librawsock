@@ -1,11 +1,10 @@
 /**
  * @file packet.h
- * @brief Packet construction and parsing utilities
+ * @brief Basic packet header structures and utilities
  * @author Sphinxes0o0
  * @version 1.0.0
  * 
- * This module provides utilities for constructing and parsing network packets
- * including IP headers, ICMP, TCP, UDP, and other protocol headers.
+ * This module provides basic structures and utilities for network packet headers.
  */
 
 #ifndef LIBRAWSOCK_PACKET_H
@@ -20,7 +19,7 @@ extern "C" {
 #include "rawsock.h"
 
 /**
- * @brief Maximum header sizes
+ * @brief Header sizes
  */
 #define RAWSOCK_IP4_HEADER_SIZE 20
 #define RAWSOCK_IP6_HEADER_SIZE 40
@@ -100,126 +99,6 @@ typedef struct {
         } frag;
     } data;
 } __attribute__((packed)) rawsock_icmp_header_t;
-
-/**
- * @brief Packet builder structure
- */
-typedef struct rawsock_packet_builder rawsock_packet_builder_t;
-
-/* ===== Packet Construction Functions ===== */
-
-/**
- * @brief Create a new packet builder
- * @param max_size Maximum packet size
- * @return Packet builder handle on success, NULL on failure
- */
-rawsock_packet_builder_t* rawsock_packet_builder_create(size_t max_size);
-
-/**
- * @brief Destroy packet builder and free resources
- * @param builder Packet builder handle
- */
-void rawsock_packet_builder_destroy(rawsock_packet_builder_t* builder);
-
-/**
- * @brief Reset packet builder for reuse
- * @param builder Packet builder handle
- */
-void rawsock_packet_builder_reset(rawsock_packet_builder_t* builder);
-
-/**
- * @brief Add IPv4 header to packet
- * @param builder Packet builder handle
- * @param src_addr Source IP address string
- * @param dst_addr Destination IP address string
- * @param protocol Protocol number
- * @param ttl Time to Live
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_add_ipv4_header(rawsock_packet_builder_t* builder,
-                                               const char* src_addr,
-                                               const char* dst_addr,
-                                               uint8_t protocol, uint8_t ttl);
-
-/**
- * @brief Add IPv6 header to packet
- * @param builder Packet builder handle
- * @param src_addr Source IP address string
- * @param dst_addr Destination IP address string
- * @param next_header Next header type
- * @param hop_limit Hop limit
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_add_ipv6_header(rawsock_packet_builder_t* builder,
-                                               const char* src_addr,
-                                               const char* dst_addr,
-                                               uint8_t next_header, uint8_t hop_limit);
-
-/**
- * @brief Add TCP header to packet
- * @param builder Packet builder handle
- * @param src_port Source port
- * @param dst_port Destination port
- * @param seq_num Sequence number
- * @param ack_num Acknowledgment number
- * @param flags TCP flags
- * @param window Window size
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_add_tcp_header(rawsock_packet_builder_t* builder,
-                                              uint16_t src_port, uint16_t dst_port,
-                                              uint32_t seq_num, uint32_t ack_num,
-                                              uint8_t flags, uint16_t window);
-
-/**
- * @brief Add UDP header to packet
- * @param builder Packet builder handle
- * @param src_port Source port
- * @param dst_port Destination port
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_add_udp_header(rawsock_packet_builder_t* builder,
-                                              uint16_t src_port, uint16_t dst_port);
-
-/**
- * @brief Add ICMP header to packet
- * @param builder Packet builder handle
- * @param type ICMP type
- * @param code ICMP code
- * @param id ICMP identifier (for echo messages)
- * @param sequence ICMP sequence number (for echo messages)
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_add_icmp_header(rawsock_packet_builder_t* builder,
-                                               uint8_t type, uint8_t code,
-                                               uint16_t id, uint16_t sequence);
-
-/**
- * @brief Add payload data to packet
- * @param builder Packet builder handle
- * @param data Payload data
- * @param data_size Size of payload data
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_add_payload(rawsock_packet_builder_t* builder,
-                                           const void* data, size_t data_size);
-
-/**
- * @brief Finalize packet and calculate checksums
- * @param builder Packet builder handle
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_finalize(rawsock_packet_builder_t* builder);
-
-/**
- * @brief Get the constructed packet data
- * @param builder Packet builder handle
- * @param packet_data Pointer to store packet data pointer
- * @param packet_size Pointer to store packet size
- * @return RAWSOCK_SUCCESS on success, error code on failure
- */
-rawsock_error_t rawsock_packet_get_data(rawsock_packet_builder_t* builder,
-                                        const void** packet_data, size_t* packet_size);
 
 /* ===== Packet Parsing Functions ===== */
 
