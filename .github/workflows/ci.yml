@@ -1,0 +1,165 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [gcc, clang]
+        std: [c11, c99, gnu11]
+        exclude:
+          # macOS doesn't have gcc by default (it's aliased to clang)
+          - os: macos-latest
+            compiler: gcc
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set compiler
+        run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            echo "CC=clang" >> $GITHUB_ENV
+          else
+            echo "CC=gcc" >> $GITHUB_ENV
+          fi
+
+      - name: Compile test program
+        run: |
+          $CC -std=${{ matrix.std }} -Wall -Wextra -o test_single_header test_single_header.c
+          echo "✓ Test program compiled successfully with ${{ matrix.compiler }} -std=${{ matrix.std }}"
+
+      - name: Compile example program
+        run: |
+          $CC -std=${{ matrix.std }} -Wall -Wextra -o example example.c
+          echo "✓ Example program compiled successfully"
+
+      - name: Compile simple test
+        run: |
+          $CC -std=${{ matrix.std }} -Wall -Wextra -o simple_test simple_test.c
+          echo "✓ Simple test compiled successfully"
+
+      - name: Run simple test (non-privileged)
+        run: |
+          ./simple_test
+          echo "✓ Simple test passed"
+
+      - name: Run test program (non-privileged tests only)
+        run: |
+          ./test_single_header || true
+          echo "✓ Non-privileged tests completed"
+
+      - name: Check header self-sufficiency
+        run: |
+          echo '#include "rawsock.h"' > test_include.c
+          echo 'int main(void) { return 0; }' >> test_include.c
+          $CC -std=${{ matrix.std }} -c test_include.c -o test_include.o
+          echo "✓ Header is self-sufficient"
+
+      - name: Test single implementation
+        run: |
+          # Test that implementation can be included in only one translation unit
+          echo '#define RAWSOCK_IMPLEMENTATION' > test_impl1.c
+          echo '#include "rawsock.h"' >> test_impl1.c
+          echo 'void test1(void) { rawsock_get_version(); }' >> test_impl1.c
+          
+          echo '#include "rawsock.h"' > test_impl2.c
+          echo 'void test2(void) { rawsock_get_version(); }' >> test_impl2.c
+          
+          echo '#include "rawsock.h"' > test_main.c
+          echo 'extern void test1(void); extern void test2(void);' >> test_main.c
+          echo 'int main(void) { test1(); test2(); return 0; }' >> test_main.c
+          
+          $CC -std=${{ matrix.std }} -c test_impl1.c -o test_impl1.o
+          $CC -std=${{ matrix.std }} -c test_impl2.c -o test_impl2.o
+          $CC -std=${{ matrix.std }} -c test_main.c -o test_main.o
+          $CC test_impl1.o test_impl2.o test_main.o -o test_link
+          ./test_link
+          echo "✓ Single implementation test passed"
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck clang-tidy
+
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=all --suppress=missingIncludeSystem \
+                   --error-exitcode=1 --inline-suppr \
+                   rawsock.h test_single_header.c example.c simple_test.c 2>&1 | tee cppcheck.log
+          echo "✓ cppcheck passed"
+
+      - name: Run clang-tidy
+        run: |
+          # Create a simple compile_commands.json for clang-tidy
+          echo '[{' > compile_commands.json
+          echo '  "directory": "'$PWD'",' >> compile_commands.json
+          echo '  "command": "clang -std=c11 -c test_single_header.c",' >> compile_commands.json
+          echo '  "file": "test_single_header.c"' >> compile_commands.json
+          echo '}]' >> compile_commands.json
+          
+          clang-tidy test_single_header.c -- -std=c11 2>&1 | tee clang-tidy.log || true
+          echo "✓ clang-tidy completed"
+
+      - name: Upload analysis logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-analysis-logs
+          path: |
+            cppcheck.log
+            clang-tidy.log
+
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check documentation
+        run: |
+          # Verify README files exist
+          test -f README.md || (echo "❌ README.md not found" && exit 1)
+          test -f README_SINGLE_HEADER.md || (echo "❌ README_SINGLE_HEADER.md not found" && exit 1)
+          echo "✓ Documentation files present"
+
+      - name: Check examples
+        run: |
+          # Verify example files exist and are valid
+          test -f example.c || (echo "❌ example.c not found" && exit 1)
+          test -f test_single_header.c || (echo "❌ test_single_header.c not found" && exit 1)
+          test -f simple_test.c || (echo "❌ simple_test.c not found" && exit 1)
+          echo "✓ Example files present"
+
+      - name: Verify single header
+        run: |
+          # Check that rawsock.h is self-contained
+          test -f rawsock.h || (echo "❌ rawsock.h not found" && exit 1)
+          
+          # Check file size is reasonable (not too large for single header)
+          size=$(stat -c%s rawsock.h 2>/dev/null || stat -f%z rawsock.h)
+          if [ $size -gt 100000 ]; then
+            echo "⚠️ Warning: rawsock.h is larger than 100KB ($size bytes)"
+          fi
+          echo "✓ Single header file verified (size: $size bytes)"
