@@ -25,6 +25,15 @@ extern "C" {
 #include <stddef.h>
 #include <sys/types.h>
 
+/* Platform-specific feature test macros */
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
+
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE
+#endif
+
 /* ===== Library Version ===== */
 #define RAWSOCK_VERSION_MAJOR 1
 #define RAWSOCK_VERSION_MINOR 0
@@ -214,6 +223,11 @@ rawsock_error_t rawsock_addr_bin_to_str(const void* addr_bin, rawsock_family_t f
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <arpa/inet.h>
+
+/* Platform-specific IP header include definitions */
+#ifdef __APPLE__
+#include <netinet/ip_var.h>
+#endif
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <time.h>
@@ -237,6 +251,11 @@ rawsock_error_t rawsock_addr_bin_to_str(const void* addr_bin, rawsock_family_t f
 /* For SOCK_CLOEXEC (not available on all platforms) */
 #ifndef SOCK_CLOEXEC
 #define SOCK_CLOEXEC 0
+#endif
+
+/* For IP_HDRINCL (not available on all platforms) */
+#ifndef IP_HDRINCL
+#define IP_HDRINCL 3
 #endif
 
 /* For INET_ADDRSTRLEN and INET6_ADDRSTRLEN */
