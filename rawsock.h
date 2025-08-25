@@ -200,6 +200,10 @@ rawsock_error_t rawsock_addr_bin_to_str(const void* addr_bin, rawsock_family_t f
 #define _POSIX_C_SOURCE 200809L
 #endif
 
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
