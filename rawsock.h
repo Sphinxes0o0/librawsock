@@ -239,6 +239,26 @@ rawsock_error_t rawsock_addr_bin_to_str(const void* addr_bin, rawsock_family_t f
 #define SOCK_CLOEXEC 0
 #endif
 
+/* For INET_ADDRSTRLEN and INET6_ADDRSTRLEN */
+#ifndef INET_ADDRSTRLEN
+#define INET_ADDRSTRLEN 16
+#endif
+
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
+
+/* For CLOCK_MONOTONIC */
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 1
+#endif
+
+#ifndef CLOCK_REALTIME
+#define CLOCK_REALTIME 0
+#endif
+
+
+
 /* Internal raw socket structure */
 struct rawsock {
     int sockfd;
@@ -389,15 +409,17 @@ int rawsock_send_to_interface(rawsock_t* sock, const void* packet, size_t packet
         return -RAWSOCK_ERROR_INVALID_PARAM;
     }
     
-    /* Set socket to use specific interface */
-    struct ifreq ifr;
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
-    
-    if (setsockopt(sock->sockfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) {
+#ifdef SO_BINDTODEVICE
+    /* Set socket to use specific interface (Linux) */
+    if (setsockopt(sock->sockfd, SOL_SOCKET, SO_BINDTODEVICE, interface, strlen(interface) + 1) < 0) {
         sock->last_error = RAWSOCK_ERROR_INVALID_PARAM;
         return -RAWSOCK_ERROR_INVALID_PARAM;
     }
+#else
+    /* Platform doesn't support SO_BINDTODEVICE */
+    (void)interface; /* Suppress unused parameter warning */
+    /* Could implement alternative methods for other platforms here */
+#endif
     
     /* Send using normal send function */
     return rawsock_send(sock, packet, packet_size, dest_addr);
@@ -652,14 +674,10 @@ static rawsock_error_t addr_string_to_sockaddr(const char* addr_str, rawsock_fam
 }
 
 static uint64_t get_timestamp_us(void) {
-    struct timespec ts;
-#ifdef CLOCK_MONOTONIC
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-        return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
-    }
-#endif
-    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
-        return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
+    /* Use gettimeofday for better compatibility */
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL) == 0) {
+        return (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
     }
     return 0;
 }
