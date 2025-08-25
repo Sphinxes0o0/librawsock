@@ -191,7 +191,15 @@ rawsock_error_t rawsock_addr_bin_to_str(const void* addr_bin, rawsock_family_t f
 
 #ifdef RAWSOCK_IMPLEMENTATION
 
+/* Feature test macros for POSIX compliance */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
