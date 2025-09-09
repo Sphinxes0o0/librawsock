@@ -5,7 +5,7 @@
 ## 特性
 
 - **单头文件** - 只需包含 `rawsock.h` 即可使用
-- **跨平台支持** - 支持 Linux 和 macOS
+- **跨平台支持** - 支持 Linux
 - **IPv4/IPv6** - 完整支持两种协议
 - **数据包解析** - 内置 IP、TCP、UDP、ICMP 头部解析器
 - **校验和计算** - IP 和传输层校验和工具
@@ -41,6 +41,62 @@ gcc -o myprogram myprogram.c
 
 # 运行（需要 root 权限）
 sudo ./myprogram
+```
+
+## 简化接口 (Easy API)
+
+项目还提供了一个简化版本的 API，封装在 `rawsock_easy.h` 中，使网络编程变得更加简单直观。
+
+### 简化接口特性
+
+- **简单易用**：最少的参数，直观的函数命名
+- **协议过滤**：支持按协议类型过滤数据包（TCP、UDP、ICMP等）
+- **灵活发送**：支持多种协议的数据包发送
+- **网卡指定**：可以指定网卡进行抓包和发包
+- **超时控制**：支持带超时的数据包捕获
+
+### 使用简化接口
+
+```c
+#define RAWSOCK_EASY_IMPLEMENTATION
+#include "rawsock_easy.h"
+```
+
+### 简化接口示例
+
+#### 抓包接口
+
+```c
+// 开始抓包
+easy_capture_t* easy_capture_start(const char* interface, uint8_t protocol);
+
+// 捕获下一个数据包
+int easy_capture_next(easy_capture_t* capture, void* buffer, 
+                      size_t buffer_size, easy_packet_info_t* info);
+
+// 带超时的捕获
+int easy_capture_next_timeout(easy_capture_t* capture, void* buffer,
+                               size_t buffer_size, int timeout_ms, 
+                               easy_packet_info_t* info);
+
+// 停止抓包
+void easy_capture_stop(easy_capture_t* capture);
+```
+
+#### 发包接口
+
+```c
+// 发送数据包
+int easy_send(const char* interface, const char* dest_ip, uint16_t dest_port,
+              const void* payload, size_t payload_size, uint8_t protocol);
+
+// 发送 ICMP 包（ping）
+int easy_send_icmp(const char* interface, const char* dest_ip,
+                   const void* payload, size_t payload_size);
+
+// 发送原始数据包
+int easy_send_raw(const char* interface, const void* packet, 
+                  size_t packet_size);
 ```
 
 ## 示例代码
@@ -85,9 +141,44 @@ int main(void) {
 }
 ```
 
-### 完整示例
+### 简化接口示例
 
-查看 `example.c` 获取更多使用示例。
+```c
+#define RAWSOCK_EASY_IMPLEMENTATION
+#include "rawsock_easy.h"
+
+int main() {
+    // 检查权限
+    if (!easy_check_privileges()) {
+        printf("需要 root 权限\n");
+        return 1;
+    }
+    
+    // 在 eth0 网卡上抓取所有 TCP 包
+    easy_capture_t* cap = easy_capture_start("eth0", PROTO_TCP);
+    if (!cap) {
+        printf("启动抓包失败\n");
+        return 1;
+    }
+    
+    uint8_t buffer[65535];
+    easy_packet_info_t info;
+    
+    // 抓取 10 个包
+    for (int i = 0; i < 10; i++) {
+        int bytes = easy_capture_next(cap, buffer, sizeof(buffer), &info);
+        if (bytes > 0) {
+            printf("抓到包: %s:%u -> %s:%u, %zu 字节\n",
+                   info.src_ip, info.src_port,
+                   info.dst_ip, info.dst_port,
+                   info.packet_size);
+        }
+    }
+    
+    easy_capture_stop(cap);
+    return 0;
+}
+```
 
 ## API 参考
 
@@ -99,103 +190,74 @@ int main(void) {
 | `rawsock_create_with_config()` | 使用自定义配置创建套接字 |
 | `rawsock_destroy()` | 关闭并释放套接字 |
 | `rawsock_send()` | 发送数据包 |
-| `rawsock_recv()` | 接收数据包 |
 
-### 数据包解析
-
-| 函数 | 描述 |
-|------|------|
-| `rawsock_parse_ipv4_header()` | 解析 IPv4 头部 |
-| `rawsock_parse_tcp_header()` | 解析 TCP 头部 |
-| `rawsock_parse_udp_header()` | 解析 UDP 头部 |
-| `rawsock_parse_icmp_header()` | 解析 ICMP 头部 |
-
-### 工具函数
-
-| 函数 | 描述 |
-|------|------|
-| `rawsock_calculate_ip_checksum()` | 计算 IP 校验和 |
-| `rawsock_calculate_transport_checksum()` | 计算 TCP/UDP 校验和 |
-| `rawsock_addr_str_to_bin()` | IP 字符串转二进制 |
-| `rawsock_addr_bin_to_str()` | 二进制转 IP 字符串 |
-
-## 文件结构
-
-```
-.
-├── rawsock.h              # 单头文件库
-├── example.c              # 使用示例
-├── test_single_header.c   # 测试程序
-├── README.md              # 本文档
-└── README_SINGLE_HEADER.md # 英文文档
-```
-
-## 平台说明
-
-### Linux
-- 需要 root 权限或 CAP_NET_RAW 能力
-- 完整支持所有功能
-
-### macOS
-- 需要 root 权限
-- 由于 BSD 实现，某些原始套接字行为可能有限制
-- IP_HDRINCL 选项行为可能与 Linux 不同
-
-## 错误处理
-
-所有函数使用 `rawsock_error_t` 枚举返回错误码：
+### 协议常量
 
 ```c
-rawsock_t* sock = rawsock_create(RAWSOCK_IPV4, IPPROTO_ICMP);
-if (!sock) {
-    // 套接字创建失败
-}
-
-int sent = rawsock_send(sock, packet, size, "192.168.1.1");
-if (sent < 0) {
-    rawsock_error_t error = rawsock_get_last_error(sock);
-    printf("错误: %s\n", rawsock_error_string(error));
-}
+#define PROTO_ALL      0    // 捕获所有协议
+#define PROTO_ICMP     1    // ICMP 协议
+#define PROTO_TCP      6    // TCP 协议  
+#define PROTO_UDP      17   // UDP 协议
+#define PROTO_ICMPV6   58   // ICMPv6 协议
+#define PROTO_RAW      255  // 原始 IP
 ```
 
-## 编译选项
+### 数据结构
 
-基础编译：
-```bash
-gcc -o program program.c
+#### 数据包信息
+```c
+typedef struct {
+    char src_ip[46];        // 源 IP 地址
+    char dst_ip[46];        // 目标 IP 地址
+    uint16_t src_port;      // 源端口
+    uint16_t dst_port;      // 目标端口
+    uint8_t protocol;       // 协议号
+    size_t packet_size;     // 数据包大小
+    uint64_t timestamp_ms;  // 时间戳（毫秒）
+} easy_packet_info_t;
 ```
 
-优化编译：
-```bash
-gcc -O2 -o program program.c
-```
-
-调试编译：
-```bash
-gcc -g -Wall -Wextra -o program program.c
-```
-
-## 测试
-
-运行测试程序：
+## 编译示例程序
 
 ```bash
-# 编译测试程序
-gcc -o test test_single_header.c
+# 编译抓包示例
+gcc -o easy_capture examples/easy_capture.c
 
-# 运行测试（部分测试需要 root）
-./test           # 运行非特权测试
-sudo ./test      # 运行所有测试
+# 编译发包示例  
+gcc -o easy_send examples/easy_send.c
+
+# 编译综合演示
+gcc -o easy_demo examples/easy_demo.c
+
+# 运行（需要 root 权限）
+sudo ./easy_capture eth0 tcp
+sudo ./easy_send udp 192.168.1.100 8080 "Hello"
+sudo ./easy_demo
 ```
 
-## 版本
+## 注意事项
 
-当前版本：1.0.0
+1. **权限要求**：所有操作都需要 root 权限
+2. **缓冲区大小**：建议使用 65535 字节的缓冲区以容纳最大的 IP 包
+3. **协议过滤**：使用 PROTO_ALL 可以捕获所有协议的包
+4. **网卡指定**：传入 NULL 表示使用默认网卡
+5. **线程安全**：每个 capture 上下文应该在单个线程中使用
 
-## 作者
+## 与底层 API 的对比
 
-Sphinxes0o0
+| 操作 | 底层 rawsock.h | 简化 rawsock_easy.h |
+|------|---------------|-------------------|
+| 抓包 | 需要创建 socket、配置选项、解析包头 | 一个函数调用 |
+| 发包 | 需要构建完整包头、计算校验和 | 自动构建包头 |
+| 过滤 | 需要手动过滤 | 内置协议过滤 |
+| 错误处理 | 多个错误码 | 简化的错误码 |
 
-## 许可
+## 性能说明
 
-这是原始 librawsock 库的简化单头文件版本。
+- 简化 API 在底层 API 基础上增加了少量开销
+- 自动包头构建和校验和计算会有轻微性能影响
+- 适合大多数应用场景，极端性能要求可使用底层 API
+
+## 许可证
+
+MIT License
