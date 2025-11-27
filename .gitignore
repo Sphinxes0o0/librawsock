@@ -3,6 +3,10 @@ build/
 bin/
 lib/
 obj/
+_codeql_build_dir/
+
+# CodeQL
+_codeql_detected_source_root
 
 # CMake generated files
 CMakeCache.txt
