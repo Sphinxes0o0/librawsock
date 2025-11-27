@@ -36,15 +36,18 @@ enum class protocol : std::uint8_t {
 /**
  * @brief Ethernet header structure
  */
+RAWSOCK_PRAGMA_PACK_PUSH
 struct ethernet_header {
     std::array<std::uint8_t, 6> dest_mac;
     std::array<std::uint8_t, 6> src_mac;
     std::uint16_t ether_type;
-} __attribute__((packed));
+} RAWSOCK_PACKED;
+RAWSOCK_PRAGMA_PACK_POP
 
 /**
  * @brief IPv4 header structure
  */
+RAWSOCK_PRAGMA_PACK_PUSH
 struct ipv4_header {
     std::uint8_t version_ihl;
     std::uint8_t tos;
@@ -66,11 +69,13 @@ struct ipv4_header {
     std::uint8_t header_length() const noexcept {
         return (version_ihl & 0x0F) * 4;
     }
-} __attribute__((packed));
+} RAWSOCK_PACKED;
+RAWSOCK_PRAGMA_PACK_POP
 
 /**
  * @brief IPv6 header structure
  */
+RAWSOCK_PRAGMA_PACK_PUSH
 struct ipv6_header {
     std::uint32_t version_class_label;
     std::uint16_t payload_length;
@@ -83,11 +88,13 @@ struct ipv6_header {
     std::uint8_t version() const noexcept {
         return (ntohl(version_class_label) >> 28) & 0x0F;
     }
-} __attribute__((packed));
+} RAWSOCK_PACKED;
+RAWSOCK_PRAGMA_PACK_POP
 
 /**
  * @brief TCP header structure
  */
+RAWSOCK_PRAGMA_PACK_PUSH
 struct tcp_header {
     std::uint16_t src_port;
     std::uint16_t dst_port;
@@ -111,21 +118,25 @@ struct tcp_header {
     std::uint8_t data_offset() const noexcept {
         return (data_offset_reserved >> 4) * 4;
     }
-} __attribute__((packed));
+} RAWSOCK_PACKED;
+RAWSOCK_PRAGMA_PACK_POP
 
 /**
  * @brief UDP header structure
  */
+RAWSOCK_PRAGMA_PACK_PUSH
 struct udp_header {
     std::uint16_t src_port;
     std::uint16_t dst_port;
     std::uint16_t length;
     std::uint16_t checksum;
-} __attribute__((packed));
+} RAWSOCK_PACKED;
+RAWSOCK_PRAGMA_PACK_POP
 
 /**
  * @brief ICMP header structure
  */
+RAWSOCK_PRAGMA_PACK_PUSH
 struct icmp_header {
     std::uint8_t type;
     std::uint8_t code;
@@ -145,7 +156,8 @@ struct icmp_header {
     // ICMP types
     static constexpr std::uint8_t echo_reply = 0;
     static constexpr std::uint8_t echo_request = 8;
-} __attribute__((packed));
+} RAWSOCK_PACKED;
+RAWSOCK_PRAGMA_PACK_POP
 
 /**
  * @brief Captured packet information

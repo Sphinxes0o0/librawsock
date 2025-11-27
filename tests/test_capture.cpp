@@ -4,35 +4,8 @@
  */
 
 #include <rawsock/rawsock.hpp>
-#include <cstdio>
-#include <cassert>
-#include <cstring>
+#include "test_common.hpp"
 #include <vector>
-
-// Test helper macros
-#define TEST(name) void test_##name()
-#define RUN_TEST(name) do { \
-    printf("Running %s...\n", #name); \
-    test_##name(); \
-    printf("PASSED: %s\n", #name); \
-} while(0)
-
-#define ASSERT_EQ(expected, actual) \
-    do { \
-        if ((expected) != (actual)) { \
-            printf("FAILED: Expected %d, got %d at line %d\n", \
-                   (int)(expected), (int)(actual), __LINE__); \
-            assert(false); \
-        } \
-    } while(0)
-
-#define ASSERT_TRUE(condition) \
-    do { \
-        if (!(condition)) { \
-            printf("FAILED: Condition failed at line %d\n", __LINE__); \
-            assert(false); \
-        } \
-    } while(0)
 
 // Test capture default constructor
 TEST(capture_default_constructor) {

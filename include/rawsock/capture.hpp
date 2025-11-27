@@ -367,47 +367,50 @@ int capture::capture_next_timeout(void* buffer, std::size_t buffer_size,
         setsockopt(socket_fd_, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     }
     
-    struct sockaddr_ll src_addr;
-    socklen_t addr_len = sizeof(src_addr);
-    
-    ssize_t received = recvfrom(socket_fd_, buffer, buffer_size, 0,
-                                reinterpret_cast<struct sockaddr*>(&src_addr), &addr_len);
-    
-    if (received < 0) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            last_error_ = error_code::timeout;
-        } else {
-            last_error_ = error_code::recv_failed;
-        }
-        return -static_cast<int>(last_error_);
-    }
-    
-    // Check protocol filter
-    if (config_.filter_protocol != protocol::all) {
-        if (should_filter_packet(buffer, static_cast<std::size_t>(received))) {
-            // Packet doesn't match filter, try again
-            return capture_next_timeout(buffer, buffer_size, timeout_ms, info);
-        }
-    }
-    
-    // Fill packet info if requested
-    if (info) {
-        extract_packet_info(buffer, static_cast<std::size_t>(received), *info);
-        info->packet_size = static_cast<std::size_t>(received);
+    // Use iterative approach for packet filtering to avoid stack overflow
+    while (true) {
+        struct sockaddr_ll src_addr;
+        socklen_t addr_len = sizeof(src_addr);
         
-        // Get timestamp
-        struct timeval tv;
-        gettimeofday(&tv, nullptr);
-        info->timestamp_us = static_cast<std::uint64_t>(tv.tv_sec) * 1000000ULL + 
-                            static_cast<std::uint64_t>(tv.tv_usec);
+        ssize_t received = recvfrom(socket_fd_, buffer, buffer_size, 0,
+                                    reinterpret_cast<struct sockaddr*>(&src_addr), &addr_len);
         
-        if (!config_.interface_name.empty()) {
-            info->interface_name = config_.interface_name;
+        if (received < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                last_error_ = error_code::timeout;
+            } else {
+                last_error_ = error_code::recv_failed;
+            }
+            return -static_cast<int>(last_error_);
         }
+        
+        // Check protocol filter
+        if (config_.filter_protocol != protocol::all) {
+            if (should_filter_packet(buffer, static_cast<std::size_t>(received))) {
+                // Packet doesn't match filter, continue loop to try again
+                continue;
+            }
+        }
+        
+        // Fill packet info if requested
+        if (info) {
+            extract_packet_info(buffer, static_cast<std::size_t>(received), *info);
+            info->packet_size = static_cast<std::size_t>(received);
+            
+            // Get timestamp
+            struct timeval tv;
+            gettimeofday(&tv, nullptr);
+            info->timestamp_us = static_cast<std::uint64_t>(tv.tv_sec) * 1000000ULL + 
+                                static_cast<std::uint64_t>(tv.tv_usec);
+            
+            if (!config_.interface_name.empty()) {
+                info->interface_name = config_.interface_name;
+            }
+        }
+        
+        last_error_ = error_code::success;
+        return static_cast<int>(received);
     }
-    
-    last_error_ = error_code::success;
-    return static_cast<int>(received);
 #else
     (void)buffer;
     (void)buffer_size;

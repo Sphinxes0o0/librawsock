@@ -54,7 +54,29 @@
 
 // Inline hints
 #define RAWSOCK_INLINE inline
-#define RAWSOCK_FORCE_INLINE __attribute__((always_inline)) inline
+#if defined(__GNUC__) || defined(__clang__)
+    #define RAWSOCK_FORCE_INLINE __attribute__((always_inline)) inline
+#elif defined(_MSC_VER)
+    #define RAWSOCK_FORCE_INLINE __forceinline
+#else
+    #define RAWSOCK_FORCE_INLINE inline
+#endif
+
+// Packed structure attribute
+#if defined(__GNUC__) || defined(__clang__)
+    #define RAWSOCK_PACKED __attribute__((packed))
+#elif defined(_MSC_VER)
+    #define RAWSOCK_PACKED
+    #define RAWSOCK_PRAGMA_PACK_PUSH _Pragma("pack(push, 1)")
+    #define RAWSOCK_PRAGMA_PACK_POP _Pragma("pack(pop)")
+#else
+    #define RAWSOCK_PACKED
+#endif
+
+#ifndef RAWSOCK_PRAGMA_PACK_PUSH
+    #define RAWSOCK_PRAGMA_PACK_PUSH
+    #define RAWSOCK_PRAGMA_PACK_POP
+#endif
 
 // Nodiscard attribute
 #if defined(RAWSOCK_CXX17)
