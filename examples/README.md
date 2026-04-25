@@ -1,27 +1,39 @@
 # Raw Socket Library Examples
 
-## Capture Tool
+## simple_test.c
 
-A network packet capture tool that demonstrates the usage of the rawsock library.
-
-### Usage
+Basic smoke test that creates raw sockets and verifies privileges.
 
 ```bash
-# Run with sudo to capture all packets
+gcc -o simple_test simple_test.c
+sudo ./simple_test
+```
+
+## capture.c
+
+Packet capture tool demonstrating both manual parsing and `rawsock_recv_auto()`.
+
+```bash
+# Compile
+gcc -o capture capture.c
+
+# Capture all protocols
 sudo ./capture
 
-# Capture only TCP packets
+# Capture specific protocol
 sudo ./capture tcp
-
-# Capture only UDP packets
 sudo ./capture udp
-
-# Capture only ICMP packets
 sudo ./capture icmp
 ```
 
-### Notes
+### Features shown
 
-- Requires root privileges to create raw sockets
-- Currently only supports IPv4
-- Press Ctrl+C to stop capture
+- `RAWSOCK_AUTO_CLOSE` for automatic resource cleanup
+- `rawsock_recv_auto()` for high-level packet reception
+- Manual `rawsock_parse_ip4/tcp/udp/icmp` for layer-by-layer inspection
+- Signal handling for graceful shutdown
+
+## Notes
+
+- All examples require root privileges or `CAP_NET_RAW`
+- Only one source file should `#define RAWSOCK_IMPLEMENTATION` when including `rawsock.h`
