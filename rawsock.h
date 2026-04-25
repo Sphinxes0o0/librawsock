@@ -273,7 +273,10 @@ rawsock_t* rawsock_open(const rawsock_cfg_t* cfg)
 #ifdef SOCK_CLOEXEC
     type |= SOCK_CLOEXEC;
 #endif
-    int fd = socket(cfg->af, type, cfg->protocol);
+    int proto = cfg->protocol;
+    if (cfg->hdr_incl && cfg->af == AF_INET && proto == 0)
+        proto = IPPROTO_RAW;
+    int fd = socket(cfg->af, type, proto);
     if (fd < 0) {
         int e = errno;
         set_err(NULL, (e == EPERM || e == EACCES) ? RSE_PERM : RSE_SOCKET, e);
@@ -402,6 +405,11 @@ int rawsock_bind_iface(rawsock_t* s, const char* ifname)
     if (!s || !ifname) { set_err(s, RSE_INVAL, EINVAL); return -1; }
 #ifdef SO_BINDTODEVICE
     if (setsockopt(s->fd, SOL_SOCKET, SO_BINDTODEVICE, ifname, (socklen_t)(strlen(ifname) + 1)) < 0)
+        { set_err(s, RSE_BIND, errno); return -1; }
+#elif defined(IP_BOUND_IF)
+    unsigned int ifindex = if_nametoindex(ifname);
+    if (ifindex == 0) { set_err(s, RSE_BIND, errno); return -1; }
+    if (setsockopt(s->fd, IPPROTO_IP, IP_BOUND_IF, &ifindex, sizeof(ifindex)) < 0)
         { set_err(s, RSE_BIND, errno); return -1; }
 #else
     (void)ifname; set_err(s, RSE_BIND, ENOTSUP); return -1;
