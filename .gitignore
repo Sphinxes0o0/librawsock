@@ -20,6 +20,17 @@ _deps/
 *.out
 *.exe
 
+# Compiled binaries (examples, tests)
+examples/capture
+examples/simple_send
+examples/simple_capture
+examples/arp_scan
+examples/ping_sweep
+examples/arp_monitor
+examples/packet_logger
+tests/offline_unit_test
+tests/send_recv_test
+
 # IDE files
 .vscode/
 .idea/
