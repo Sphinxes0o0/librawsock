@@ -34,14 +34,16 @@ static void build_icmp_header(uint8_t* buf, uint8_t type, uint8_t code,
 
 int main(int argc, char** argv) {
     int protocol = 0; // UDP
+    const char* dst_ip = "127.0.0.1";
     if (argc >= 2) {
         if (std::strcmp(argv[1], "udp") == 0) protocol = 0;
         else if (std::strcmp(argv[1], "icmp") == 0) protocol = 1;
         else {
-            std::fprintf(stderr, "Usage: %s [udp|icmp]\n", argv[0]);
+            std::fprintf(stderr, "Usage: %s [udp|icmp] [dst_ip]\n", argv[0]);
             return 1;
         }
     }
+    if (argc >= 3) dst_ip = argv[2];
 
     if (!rawsock::has_caps()) {
         std::fprintf(stderr, "Error: Root privileges required\n");
@@ -66,7 +68,7 @@ int main(int argc, char** argv) {
             build_udp_header(packet, 12345, 54321, payload_len);
             std::memcpy(packet + RAWSOCK_UDP_HLEN, payload, payload_len);
 
-            ssize_t sent = sock.send(packet, RAWSOCK_UDP_HLEN + payload_len, "127.0.0.1");
+            ssize_t sent = sock.send(packet, RAWSOCK_UDP_HLEN + payload_len, dst_ip);
             std::printf("UDP sent: %zd bytes\n", sent);
         } else {
             const char* payload = "ICMP test";
@@ -74,7 +76,7 @@ int main(int argc, char** argv) {
             build_icmp_header(packet, 8, 0, 0x1234, 99);
             std::memcpy(packet + RAWSOCK_ICMP_HLEN, payload, payload_len);
 
-            ssize_t sent = sock.send(packet, RAWSOCK_ICMP_HLEN + payload_len, "127.0.0.1");
+            ssize_t sent = sock.send(packet, RAWSOCK_ICMP_HLEN + payload_len, dst_ip);
             std::printf("ICMP sent: %zd bytes\n", sent);
         }
 
