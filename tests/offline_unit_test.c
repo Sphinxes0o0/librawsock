@@ -90,11 +90,96 @@ static void test_checksums(void) {
     assert(pseudo != 0);
 }
 
+static void test_parse_ip6(void) {
+    // IPv6 packet: 2001:db8::1 -> 2001:db8::2, next header = TCP (6)
+    static const uint8_t pkt[] = {
+        0x60, 0x00, 0x00, 0x00,  // version(6) + traffic class + flow label
+        0x00, 0x28,               // payload length = 40
+        0x06,                     // next header = TCP
+        0x40,                     // hop limit = 64
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // src: 2001:db8::1
+        0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02   // dst: 2001:db8::2
+    };
+
+    rawsock_ip6_t ip6;
+    const void* l4 = NULL;
+    size_t l4_len = 0;
+
+    assert(rawsock_parse_ip6(pkt, sizeof(pkt), &ip6, &l4, &l4_len) == 0);
+    assert(ip6.payload_len == 40);
+    assert(ip6.next_header == 6);  // TCP
+    assert(ip6.hop_limit == 64);
+    assert(memcmp(ip6.src, "\x20\x01\x0d\xb8\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 16) == 0);
+    assert(memcmp(ip6.dst, "\x20\x01\x0d\xb8\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02", 16) == 0);
+    (void)l4; (void)l4_len;
+}
+
+static void test_parse_truncated_headers(void) {
+    static const uint8_t short_ip4[] = {0x45, 0x00, 0x00, 0x14};  // only 4 bytes
+    rawsock_ip4_t ip4;
+    assert(rawsock_parse_ip4(short_ip4, sizeof(short_ip4), &ip4, NULL, NULL) < 0);
+
+    static const uint8_t short_tcp[] = {0x30, 0x39, 0x01};  // only 3 bytes
+    rawsock_tcp_t tcp;
+    assert(rawsock_parse_tcp(short_tcp, sizeof(short_tcp), &tcp) < 0);
+
+    static const uint8_t short_udp[] = {0x1f, 0x90, 0x00};  // only 3 bytes
+    rawsock_udp_t udp;
+    assert(rawsock_parse_udp(short_udp, sizeof(short_udp), &udp) < 0);
+
+    static const uint8_t short_icmp[] = {0x08, 0x00};  // only 2 bytes
+    rawsock_icmp_t icmp;
+    assert(rawsock_parse_icmp(short_icmp, sizeof(short_icmp), &icmp) < 0);
+}
+
+static void test_parse_ip6_truncated(void) {
+    static const uint8_t short_ip6[] = {0x60, 0x00, 0x00};  // only 3 bytes
+    rawsock_ip6_t ip6;
+    assert(rawsock_parse_ip6(short_ip6, sizeof(short_ip6), &ip6, NULL, NULL) < 0);
+}
+
+static void test_cksum_edge_cases(void) {
+    // Empty data
+    uint16_t csum_empty = rawsock_cksum(NULL, 0);
+    (void)csum_empty;  // just ensure it doesn't crash
+
+    // Single byte
+    static const uint8_t single[] = {0x01};
+    uint16_t csum_single = rawsock_cksum(single, sizeof(single));
+    assert(csum_single != 0);  // should be non-zero
+
+    // Odd length (3 bytes)
+    static const uint8_t triple[] = {0x01, 0x02, 0x03};
+    uint16_t csum_triple = rawsock_cksum(triple, sizeof(triple));
+    assert(csum_triple != 0);
+
+    // Pseudo header with IPv6 addresses
+    static const uint8_t src6[16] = {0};
+    static const uint8_t dst6[16] = {0};
+    uint16_t pseudo6 = rawsock_cksum_pseudo(src6, dst6, 16, IPPROTO_TCP, src6, 16);
+    assert(pseudo6 != 0);
+}
+
+static void test_pton_invalid(void) {
+    uint8_t v4[4];
+    // Invalid IPv4
+    assert(rawsock_pton("not.an.ip.address", AF_INET, v4, sizeof(v4)) < 0);
+    // Buffer too small
+    assert(rawsock_pton("127.0.0.1", AF_INET, v4, 2) < 0);
+    // Invalid family
+    assert(rawsock_pton("127.0.0.1", AF_UNSPEC, v4, sizeof(v4)) < 0);
+}
+
 int main(void) {
     test_invalid_open_sets_global_error();
     test_addr_helpers();
     test_parse_ip4_and_l4();
     test_checksums();
+    test_parse_ip6();
+    test_parse_truncated_headers();
+    test_parse_ip6_truncated();
+    test_cksum_edge_cases();
+    test_pton_invalid();
 
     puts("offline_unit_test: all checks passed");
     return 0;

@@ -183,18 +183,64 @@ typedef struct {
 } rawsock_pkt_t;
 ```
 
-## 编译示例
+## C++ 封装
+
+提供 header-only 的 C++ 封装 `rawsock.hpp`，支持 RAII 和异常：
+
+```cpp
+#include "rawsock.hpp"
+
+int main() {
+    try {
+        rawsock::socket sock = rawsock::socket::open_ip4(IPPROTO_ICMP);
+        uint8_t buf[1024];
+        ssize_t n = sock.recv(buf, sizeof(buf));
+    } catch (const rawsock::error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+```
+
+编译 C++ 示例：
+```bash
+gcc -c rawsock.c -o rawsock.o
+g++ -std=c++11 -o myprogram myprogram.cpp rawsock.o
+```
+
+## 示例程序
+
+| 示例 | 说明 | 用法 |
+|------|------|------|
+| `simple_send.cpp` | 基础发送 | `sudo ./simple_send [udp\|icmp]` |
+| `simple_capture.cpp` | 基础抓包 | `sudo ./simple_capture [tcp\|udp\|icmp\|all]` |
+| `arp_scan.cpp` | ARP 扫描器 | `sudo ./arp_scan 192.168.1.0/24` |
+| `ping_sweep.cpp` | ICMP 探测 | `sudo ./ping_sweep 192.168.1.0/24` |
+| `arp_monitor.cpp` | ARP 欺骗检测 | `sudo ./arp_monitor [iface]` |
+| `packet_logger.cpp` | 数据包记录 | `sudo ./packet_logger output.log [tcp\|udp\|icmp\|all]` |
+
+编译所有示例：
+```bash
+gcc -c rawsock.c -o rawsock.o
+g++ -std=c++11 -o examples/arp_scan      examples/arp_scan.cpp      rawsock.o
+g++ -std=c++11 -o examples/ping_sweep   examples/ping_sweep.cpp   rawsock.o
+g++ -std=c++11 -o examples/arp_monitor  examples/arp_monitor.cpp  rawsock.o
+g++ -std=c++11 -o examples/packet_logger examples/packet_logger.cpp rawsock.o
+g++ -std=c++11 -o examples/simple_capture examples/simple_capture.cpp rawsock.o
+g++ -std=c++11 -o examples/simple_send    examples/simple_send.cpp    rawsock.o
+```
+
+## 编译测试
 
 ```bash
-# 编译测试程序
-gcc -o simple_test examples/simple_test.c
+# C 单元测试（离线）
+gcc -o tests/offline_unit_test tests/offline_unit_test.c
+./tests/offline_unit_test
 
-# 编译抓包示例
-gcc -o capture examples/capture.c
+# C send/recv 测试（需要 root）
+sudo ./tests/send_recv_test
 
-# 运行（需要 root 权限）
-sudo ./simple_test
-sudo ./capture tcp
+# 运行抓包示例
+sudo ./examples/capture tcp
 ```
 
 ## 注意事项

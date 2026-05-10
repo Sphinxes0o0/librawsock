@@ -51,7 +51,7 @@ typedef enum {
 } rawsock_err_t;
 
 /* ───────────────  Handle (opaque but struct visible for inline close)  ─────────────── */
-typedef struct rawsock {
+typedef struct rawsock_ctx {
     int           fd;
     int           af;          /* AF_INET or AF_INET6 */
     int           proto;

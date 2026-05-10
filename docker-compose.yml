@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # Offline unit tests — no privileges needed
+  test-offline:
+    build: .
+    command: ./tests/offline_unit_test
+
+  # C example — needs NET_RAW capability
+  test-simple-c:
+    build: .
+    command: sh -c "gcc -o /tmp/simple_test examples/simple_test.c rawsock.c && ./tmp/simple_test"
+    cap_add:
+      - NET_RAW
+    privileged: true
+
+  # C++ send example — needs NET_RAW capability
+  test-cpp-send:
+    build: .
+    command: ./examples/simple_send udp
+    cap_add:
+      - NET_RAW
+    privileged: true
+
+  # C++ arp_scan example
+  test-arp-scan:
+    build: .
+    command: ./examples/arp_scan 172.17.0.1-254
+    cap_add:
+      - NET_RAW
+    privileged: true
+    network_mode: host
+
+  # C++ ping_sweep example
+  test-ping-sweep:
+    build: .
+    command: ./examples/ping_sweep 172.17.0.0/24
+    cap_add:
+      - NET_RAW
+    privileged: true
+    network_mode: host
