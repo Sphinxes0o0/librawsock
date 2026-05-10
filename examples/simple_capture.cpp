@@ -19,6 +19,7 @@ void signal_handler(int sig) {
 
 int main(int argc, char** argv) {
     const char* protocol_str = (argc > 1) ? argv[1] : "all";
+    const char* iface = (argc > 2) ? argv[2] : nullptr;
 
     if (!rawsock::has_caps()) {
         std::fprintf(stderr, "Error: Root privileges required\n");
@@ -34,9 +35,16 @@ int main(int argc, char** argv) {
     else                                             cfg.protocol = 0; // all
 
     cfg.rcv_timeout_ms = 1000;
+    cfg.hdr_incl = false;  // Let kernel handle IP header on receive
 
     try {
         rawsock::socket sock(cfg);
+        // Bind to interface for loopback capture (Linux/macOS)
+        // Usage: sudo ./simple_capture [proto] lo
+        if (iface) {
+            sock.bind_iface(iface);
+            std::printf("Bound to interface: %s\n", iface);
+        }
         std::printf("Started capture (protocol: %s)\nPress Ctrl+C to stop...\n\n", protocol_str);
 
         uint8_t buf[RAWSOCK_MAX_PACKET];

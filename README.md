@@ -212,11 +212,17 @@ g++ -std=c++11 -o myprogram myprogram.cpp
 | 示例 | 说明 | 用法 |
 |------|------|------|
 | `simple_send.cpp` | 基础发送 | `sudo ./simple_send [udp\|icmp]` |
-| `simple_capture.cpp` | 基础抓包 | `sudo ./simple_capture [tcp\|udp\|icmp\|all]` |
+| `simple_capture.cpp` | 基础抓包 | `sudo ./simple_capture [proto] [iface]` |
 | `arp_scan.cpp` | ARP 扫描器 | `sudo ./arp_scan 192.168.1.0/24` |
 | `ping_sweep.cpp` | ICMP 探测 | `sudo ./ping_sweep 192.168.1.0/24` |
 | `arp_monitor.cpp` | ARP 欺骗检测 | `sudo ./arp_monitor [iface]` |
 | `packet_logger.cpp` | 数据包记录 | `sudo ./packet_logger output.log [tcp\|udp\|icmp\|all]` |
+
+> **Loopback 注意**：捕获 127.0.0.1 的包需要绑定到 loopback 接口：
+> ```bash
+> sudo ./simple_capture udp lo   # Linux
+> sudo ./simple_capture udp lo0  # macOS
+> ```
 
 编译所有示例：
 ```bash
