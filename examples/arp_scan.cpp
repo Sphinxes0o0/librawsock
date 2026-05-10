@@ -87,16 +87,12 @@ static bool parse_ip(const char* str, uint8_t* ip) {
 }
 
 static bool parse_cidr(const char* cidr, uint8_t* base_ip, uint8_t* mask) {
-    uint32_t ip_int = 0;
+    uint8_t a, b, c, d;
     int bits = 24;
-    if (sscanf(cidr, "%u.%u.%u.%u/%d", (unsigned*)&ip_int, (unsigned*)&ip_int+1,
-               (unsigned*)&ip_int+2, (unsigned*)&ip_int+3, &bits) != 5) {
+    if (sscanf(cidr, "%hhu.%hhu.%hhu.%hhu/%d", &a, &b, &c, &d, &bits) != 5) {
         return false;
     }
-    base_ip[0] = (ip_int >> 24) & 0xFF;
-    base_ip[1] = (ip_int >> 16) & 0xFF;
-    base_ip[2] = (ip_int >> 8) & 0xFF;
-    base_ip[3] = ip_int & 0xFF;
+    base_ip[0] = a; base_ip[1] = b; base_ip[2] = c; base_ip[3] = d;
     *mask = (uint8_t)bits;
     return bits >= 0 && bits <= 32;
 }
@@ -140,9 +136,12 @@ int main(int argc, char** argv) {
             start_ip[3] = 0; end_ip[3] = 255;
         }
     } else if (strchr(target, '-')) {
-        char* dash = const_cast<char*>(strchr(target, '-'));
+        char target_copy[32];
+        strncpy(target_copy, target, sizeof(target_copy) - 1);
+        target_copy[sizeof(target_copy) - 1] = '\0';
+        char* dash = strchr(target_copy, '-');
         *dash = '\0';
-        if (!parse_ip(target, start_ip) || !parse_ip(dash + 1, end_ip)) {
+        if (!parse_ip(target_copy, start_ip) || !parse_ip(dash + 1, end_ip)) {
             std::fprintf(stderr, "Invalid range: %s\n", target);
             return 1;
         }
@@ -153,7 +152,7 @@ int main(int argc, char** argv) {
 
     // Our MAC (fake for this example - in production, get real interface MAC)
     uint8_t src_mac[6] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-    uint8_t src_ip[4] = {0, 0, 0, 0};  // Will be auto-detected in production
+    uint8_t src_ip[4] = {127, 0, 0, 1};  // Use loopback for testing
 
     try {
         rawsock::socket sock;
