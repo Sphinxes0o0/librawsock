@@ -11,6 +11,7 @@
  *   sudo ./arp_monitor eth0
  */
 
+#define RAWSOCK_IMPLEMENTATION
 #include "../rawsock.hpp"
 #include <cstdio>
 #include <cstdlib>

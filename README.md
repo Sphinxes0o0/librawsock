@@ -203,8 +203,8 @@ int main() {
 
 编译 C++ 示例：
 ```bash
-gcc -c rawsock.c -o rawsock.o
-g++ -std=c++11 -o myprogram myprogram.cpp rawsock.o
+# C++ 示例直接定义 RAWSOCK_IMPLEMENTATION 即可
+g++ -std=c++11 -o myprogram myprogram.cpp
 ```
 
 ## 示例程序
@@ -220,13 +220,12 @@ g++ -std=c++11 -o myprogram myprogram.cpp rawsock.o
 
 编译所有示例：
 ```bash
-gcc -c rawsock.c -o rawsock.o
-g++ -std=c++11 -o examples/arp_scan      examples/arp_scan.cpp      rawsock.o
-g++ -std=c++11 -o examples/ping_sweep   examples/ping_sweep.cpp   rawsock.o
-g++ -std=c++11 -o examples/arp_monitor  examples/arp_monitor.cpp  rawsock.o
-g++ -std=c++11 -o examples/packet_logger examples/packet_logger.cpp rawsock.o
-g++ -std=c++11 -o examples/simple_capture examples/simple_capture.cpp rawsock.o
-g++ -std=c++11 -o examples/simple_send    examples/simple_send.cpp    rawsock.o
+g++ -std=c++11 -o examples/arp_scan      examples/arp_scan.cpp
+g++ -std=c++11 -o examples/ping_sweep   examples/ping_sweep.cpp
+g++ -std=c++11 -o examples/arp_monitor  examples/arp_monitor.cpp
+g++ -std=c++11 -o examples/packet_logger examples/packet_logger.cpp
+g++ -std=c++11 -o examples/simple_capture examples/simple_capture.cpp
+g++ -std=c++11 -o examples/simple_send   examples/simple_send.cpp
 ```
 
 ## 编译测试

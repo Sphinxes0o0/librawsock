@@ -575,7 +575,7 @@ uint16_t rawsock_cksum_pseudo(const void* src, const void* dst,
     for (p = ph, i = 0; i + 1 < ph_len; i += 2)
         sum += ((uint16_t)p[i] << 8) | p[i + 1];
     if (i < ph_len) sum += (uint16_t)p[i] << 8;
-    for (p = data, i = 0; i + 1 < len; i += 2)
+    for (p = (const uint8_t*)data, i = 0; i + 1 < len; i += 2)
         sum += ((uint16_t)p[i] << 8) | p[i + 1];
     if (i < len) sum += (uint16_t)p[i] << 8;
     while (sum >> 16) sum = (sum & 0xFFFF) + (sum >> 16);

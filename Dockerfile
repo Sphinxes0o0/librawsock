@@ -14,14 +14,13 @@ WORKDIR /workspace
 COPY . .
 
 # Compile the C library and tests
-RUN gcc -c rawsock.c -o rawsock.o && \
-    gcc -o tests/offline_unit_test tests/offline_unit_test.c && \
-    g++ -std=c++11 -o examples/simple_send      examples/simple_send.cpp      rawsock.o && \
-    g++ -std=c++11 -o examples/simple_capture   examples/simple_capture.cpp   rawsock.o && \
-    g++ -std=c++11 -o examples/arp_scan         examples/arp_scan.cpp         rawsock.o && \
-    g++ -std=c++11 -o examples/ping_sweep       examples/ping_sweep.cpp       rawsock.o && \
-    g++ -std=c++11 -o examples/arp_monitor      examples/arp_monitor.cpp      rawsock.o && \
-    g++ -std=c++11 -o examples/packet_logger    examples/packet_logger.cpp    rawsock.o
+RUN gcc -o tests/offline_unit_test tests/offline_unit_test.c && \
+    g++ -std=c++11 -o examples/simple_send      examples/simple_send.cpp && \
+    g++ -std=c++11 -o examples/simple_capture   examples/simple_capture.cpp && \
+    g++ -std=c++11 -o examples/arp_scan         examples/arp_scan.cpp && \
+    g++ -std=c++11 -o examples/ping_sweep       examples/ping_sweep.cpp && \
+    g++ -std=c++11 -o examples/arp_monitor      examples/arp_monitor.cpp && \
+    g++ -std=c++11 -o examples/packet_logger    examples/packet_logger.cpp
 
 # Default command: run offline unit tests
 CMD ["./tests/offline_unit_test"]

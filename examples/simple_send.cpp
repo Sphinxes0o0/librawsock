@@ -3,6 +3,7 @@
  * @brief C++ raw socket send example using rawsock.hpp
  */
 
+#define RAWSOCK_IMPLEMENTATION
 #include "../rawsock.hpp"
 #include <cstdio>
 #include <cstdlib>

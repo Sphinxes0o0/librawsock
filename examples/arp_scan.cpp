@@ -10,6 +10,7 @@
  *   sudo ./arp_scan 192.168.1.1-254
  */
 
+#define RAWSOCK_IMPLEMENTATION
 #include "../rawsock.hpp"
 #include <cstdio>
 #include <cstdlib>

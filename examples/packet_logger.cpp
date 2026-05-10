@@ -12,6 +12,7 @@
  *   sudo ./packet_logger output.log udp    # only UDP
  */
 
+#define RAWSOCK_IMPLEMENTATION
 #include "../rawsock.hpp"
 #include <cstdio>
 #include <cstdlib>

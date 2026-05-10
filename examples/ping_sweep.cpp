@@ -10,6 +10,7 @@
  *   sudo ./ping_sweep 10.0.0.1-254
  */
 
+#define RAWSOCK_IMPLEMENTATION
 #include "../rawsock.hpp"
 #include <cstdio>
 #include <cstdlib>
